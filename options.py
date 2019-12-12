@@ -9,9 +9,9 @@ def read_command_line(argv=None):
 
     #-------------------------------------------------------------------------
     # Data input settings
-    parser.add_argument('-visdial_processed_train', default='data/visdial/visdial_1.0_train_processed.json', \
+    parser.add_argument('-visdial_processed_train', default='data/avsd/train.json', \
                                  help='json file containing train split of visdial data')
-    parser.add_argument('-visdial_processed_val', default='data/visdial/visdial_1.0_val_processed.json',
+    parser.add_argument('-visdial_processed_val', default='data/avsd/val.json',
                             help='json file containing val split of visdial data')
     parser.add_argument('-visdial_processed_test', default='data/visdial/visdial_1.0_test_processed.json',
                             help='json file containing test split of visdial data')
@@ -24,16 +24,16 @@ def read_command_line(argv=None):
     parser.add_argument('-visdial_processed_val_dense_annotations', default='data/visdial/visdial_1.0_val_dense_annotations_processed.json',
                             help='JSON file with dense annotations')
     parser.add_argument('-start_path', default='', help='path of starting model checkpt')
-    parser.add_argument('-model_config', default='config/bert_base_6layer_6conect.json', help='model definition of the bert model')
+    parser.add_argument('-model_config', default='config/bert_base_baseline.json', help='model definition of the bert model')
     #-------------------------------------------------------------------------
     # Logging settings
-    parser.add_argument('-enable_visdom', type=int, default=0,
+    parser.add_argument('-enable_visdom', type=int, default=1,
                             help='Flag for enabling visdom logging')
-    parser.add_argument('-visdom_env', type=str, default='',
+    parser.add_argument('-visdom_env', type=str, default='visdial-bert-avsd',
                             help='Name of visdom environment for plotting')
     parser.add_argument('-visdom_server', type=str, default='http://asimo.cc.gatech.edu',
                             help='Address of visdom server instance')
-    parser.add_argument('-visdom_server_port', type=int, default=7777,
+    parser.add_argument('-visdom_server_port', type=int, default=7722,
                             help='Port of visdom server instance')
     #-------------------------------------------------------------------------
     # Optimization / training params
