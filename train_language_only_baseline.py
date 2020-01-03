@@ -172,6 +172,7 @@ if __name__ == '__main__':
     os.makedirs('checkpoints', exist_ok=True)
     if not os.path.exists(params['save_path']):
         os.mkdir(params['save_path'])
+
     viz = VisdomVisualize(
         enable=bool(params['enable_visdom']),
         env_name=params['visdom_env'],

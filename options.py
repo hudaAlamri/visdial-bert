@@ -40,7 +40,7 @@ def read_command_line(argv=None):
     # Other training environmnet settings
     parser.add_argument('-num_workers', default=8, type=int,
                             help='Number of worker threads in dataloader')  
-    parser.add_argument('-batch_size', default=80, type=int,
+    parser.add_argument('-batch_size', default=8, type=int,
                             help='size of mini batch')
     parser.add_argument('-num_epochs', default=20, type=int,
                             help='total number of epochs')

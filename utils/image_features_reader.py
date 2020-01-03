@@ -37,9 +37,9 @@ class ImageFeaturesH5Reader(object):
         # with h5py.File(self.features_h5path, "r", libver='latest', swmr=True) as features_h5:
             # self._image_ids = list(features_h5["image_ids"])
             # If not loaded in memory, then list of None.
+        '''
         self.env = lmdb.open(self.features_path, max_readers=1, readonly=True,
                             lock=False, readahead=False, meminit=False)
-
         with self.env.begin(write=False) as txn: 
             self._image_ids = pickle.loads(txn.get('keys'.encode()))
 
@@ -48,7 +48,8 @@ class ImageFeaturesH5Reader(object):
         self.boxes = [None] * len(self._image_ids)
         self.boxes_ori = [None] * len(self._image_ids)
         self.cls_prob = [None] * len(self._image_ids)
-    
+        '''
+
     def __len__(self):
         return len(self._image_ids)
 
