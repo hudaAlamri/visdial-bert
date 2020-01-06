@@ -1,0 +1,43 @@
+Current host: hostname
+Initializing visdom env [debugvisdial_batch_128_lr_4e-05_ilr_2e-05_bm_1_lmcoeff_1_nspcoeff_1_maskprob_0.1_spi_8_tot_rnds_11_job]
+Exception in user code:
+------------------------------------------------------------
+{'batch_multiply': 1,
+ 'batch_size': 128,
+ 'continue': False,
+ 'enable_visdom': 1,
+ 'image_lr': 2e-05,
+ 'img_loss_coeff': 1,
+ 'lm_loss_coeff': 1.0,
+ 'lr': 4e-05,
+ 'mask_prob': 0.1,
+ 'max_seq_len': 256,
+ 'model_config': 'config/bert_base_baseline.json',
+ 'n_gpus': 8,
+ 'nsp_loss_coeff': 1.0,
+ 'num_epochs': 1,
+ 'num_negative_samples': 1,
+ 'num_options': 100,
+ 'num_train_samples': 0,
+ 'num_val_samples': 0,
+ 'num_workers': 8,
+ 'overfit': False,
+ 'save_name': '01-Jan-20-18:35:47-Weddebugvisdial_batch_128_lr_4e-05_ilr_2e-05_bm_1_lmcoeff_1_nspcoeff_1_maskprob_0.1_spi_8_tot_rnds_11_job',
+ 'save_path': 'checkpoints/01-Jan-20-18:35:47-Weddebugvisdial_batch_128_lr_4e-05_ilr_2e-05_bm_1_lmcoeff_1_nspcoeff_1_maskprob_0.1_spi_8_tot_rnds_11_job',
+ 'sequences_per_image': 8,
+ 'start_path': '',
+ 'visdial_image_feats': 'data/data/visdial/visdial_img_feat.lmdb',
+ 'visdial_processed_test': 'data/data/visdial/visdial_1.0_test_processed.json',
+ 'visdial_processed_train': 'data/data/avsd/train_options.json',
+ 'visdial_processed_train_dense': 'data/data/visdial/visdial_1.0_train_dense_processed.json',
+ 'visdial_processed_train_dense_annotations': 'data/visdial/visdial_1.0_train_dense_annotations_processed.json',
+ 'visdial_processed_val': 'data/data/avsd/val_options.json',
+ 'visdial_processed_val_dense_annotations': 'data/data/visdial/visdial_1.0_val_dense_annotations_processed.json',
+ 'visdial_tot_rounds': 11,
+ 'visdom_env': 'debugvisdial_batch_128_lr_4e-05_ilr_2e-05_bm_1_lmcoeff_1_nspcoeff_1_maskprob_0.1_spi_8_tot_rnds_11_job',
+ 'visdom_server': 'http://asimo.cc.gatech.edu',
+ 'visdom_server_port': 7676}
+Exception in user code:
+------------------------------------------------------------
+
+499 iter per epoch.

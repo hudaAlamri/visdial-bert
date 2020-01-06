@@ -9,19 +9,19 @@ def read_command_line(argv=None):
 
     #-------------------------------------------------------------------------
     # Data input settings
-    parser.add_argument('-visdial_processed_train', default='data/avsd/train.json', \
+    parser.add_argument('-visdial_processed_train', default='data/data/avsd/train_options.json', \
                                  help='json file containing train split of visdial data')
-    parser.add_argument('-visdial_processed_val', default='data/avsd/val.json',
+    parser.add_argument('-visdial_processed_val', default='data/data/avsd/val_options.json',
                             help='json file containing val split of visdial data')
-    parser.add_argument('-visdial_processed_test', default='data/visdial/visdial_1.0_test_processed.json',
+    parser.add_argument('-visdial_processed_test', default='data/data/visdial/visdial_1.0_test_processed.json',
                             help='json file containing test split of visdial data')
-    parser.add_argument('-visdial_image_feats', default='data/visdial/visdial_img_feat.lmdb',
+    parser.add_argument('-visdial_image_feats', default='data/data/visdial/visdial_img_feat.lmdb',
                             help='json file containing image feats for train,val and splits of visdial data')
-    parser.add_argument('-visdial_processed_train_dense', default='data/visdial/visdial_1.0_train_dense_processed.json',
+    parser.add_argument('-visdial_processed_train_dense', default='data/data/visdial/visdial_1.0_train_dense_processed.json',
                             help='samples on the train split for which dense annotations are available')
     parser.add_argument('-visdial_processed_train_dense_annotations', default='data/visdial/visdial_1.0_train_dense_annotations_processed.json',
                             help='json file containing dense annotations on some instance of the train split')
-    parser.add_argument('-visdial_processed_val_dense_annotations', default='data/visdial/visdial_1.0_val_dense_annotations_processed.json',
+    parser.add_argument('-visdial_processed_val_dense_annotations', default='data/data/visdial/visdial_1.0_val_dense_annotations_processed.json',
                             help='JSON file with dense annotations')
     parser.add_argument('-start_path', default='', help='path of starting model checkpt')
     parser.add_argument('-model_config', default='config/bert_base_baseline.json', help='model definition of the bert model')
@@ -40,7 +40,7 @@ def read_command_line(argv=None):
     # Other training environmnet settings
     parser.add_argument('-num_workers', default=8, type=int,
                             help='Number of worker threads in dataloader')  
-    parser.add_argument('-batch_size', default=8, type=int,
+    parser.add_argument('-batch_size', default=6, type=int,
                             help='size of mini batch')
     parser.add_argument('-num_epochs', default=20, type=int,
                             help='total number of epochs')
