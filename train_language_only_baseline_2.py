@@ -315,7 +315,7 @@ if __name__ == '__main__':
                         
         old_num_iter_per_epoch = num_iter_per_epoch
         if params['overfit']:
-            num_iter_per_epoch = 1
+            num_iter_per_epoch = 100
         if iter_id % num_iter_per_epoch == 0 and iter_id > 0:
             torch.save({'model_state_dict' : dialog_encoder.module.state_dict(),'scheduler_state_dict':scheduler.state_dict() \
                  ,'optimizer_state_dict': optimizer.state_dict(), 'iter_id':iter_id}, os.path.join(params['save_path'], 'visdial_dialog_encoder_%d.ckpt'%iter_id))
