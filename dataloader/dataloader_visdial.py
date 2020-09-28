@@ -12,6 +12,36 @@ import argparse
 from torch.utils.data import DataLoader
 from time import gmtime, strftime
 import os
+from tqdm import tqdm
+
+def get_features_path(feature_path, train_data, val_data):
+
+    all_features = {}
+    print("Reading video data....................")
+
+    vid_set = set()
+
+    for dialog in tqdm(train_data['data']['dialogs']):
+        vid = dialog["image_id"]
+        vid_set.add(vid)
+
+    for dialog in tqdm(val_data['data']['dialogs']):
+        vid = dialog["image_id"]
+        vid_set.add(vid)
+
+    fea_types = ['vggish', 'i3d_flow', 'i3d_rgb']
+    dataname = '<FeaType>/<ImageID>.npy'
+
+    for ftype in fea_types:
+        basename = dataname.replace('<FeaType>', ftype)
+        features = {}
+        for vid in vid_set:
+            filename = basename.replace('<ImageID>', vid)
+            filepath = feature_path + filename
+            features[vid] = (filepath, filepath)
+        all_features[ftype] = features
+
+    return all_features
 
 class VisdialDataset(data.Dataset):
 
@@ -20,6 +50,7 @@ class VisdialDataset(data.Dataset):
         self.numDataPoints = {}
         num_samples_train = params['num_train_samples']
         num_samples_val = params['num_val_samples']
+
         #self._image_features_reader = ImageFeaturesH5Reader(params['visdial_image_feats'])
         with open(params['visdial_processed_train']) as f:
             self.visdial_data_train = json.load(f)
@@ -68,6 +99,11 @@ class VisdialDataset(data.Dataset):
         self.SEP = indexed_tokens[2]
         self.params = params
         self._max_region_num = 37
+
+        if params["feature_path"]:
+            self.features = get_features_path(params["feature_path"],  self.visdial_data_train ,self.visdial_data_val)
+        else:
+            self.features = None
 
     def __len__(self):
         return self.numDataPoints[self._split]
@@ -256,6 +292,28 @@ class VisdialDataset(data.Dataset):
             item['image_target'] = image_target
             item['image_label'] = image_label
             '''
+            # get video features
+            vid = img_id
+            if self.features is not None:
+                try:
+                    vgg = np.load(self.features["vggish"][vid][0])
+                    i3d_flow = np.load(self.features["i3d_flow"][vid][0])
+                    i3d_rgb = np.load(self.features["i3d_rgb"][vid][0])
+                except KeyError:
+                    vgg = np.load(self.features["vggish"][vid][1])
+                    i3d_flow = np.load(self.features["i3d_flow"][vid][1])
+                    i3d_rgb = np.load(self.features["i3d_rgb"][vid][1])
+
+                sample_i3d_flow = i3d_flow[range(1, i3d_flow.shape[0], 1)]
+                sample_i3d_rgb = i3d_rgb[range(1, i3d_rgb.shape[0], 1)]
+
+                vgg = torch.from_numpy(vgg).float()
+                i3d_flow = torch.from_numpy(sample_i3d_flow).float()
+                i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
+                min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
+                i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
+                item['image_feat'] = i3d
+
             return item
         
         elif self.split == 'val':
@@ -358,8 +416,30 @@ class VisdialDataset(data.Dataset):
 
             item['image_id'] = torch.LongTensor([img_id])
             '''
+
+            vid = img_id
+            if self.features is not None:
+                try:
+                    vgg = np.load(self.features["vggish"][vid][0])
+                    i3d_flow = np.load(self.features["i3d_flow"][vid][0])
+                    i3d_rgb = np.load(self.features["i3d_rgb"][vid][0])
+                except KeyError:
+                    vgg = np.load(self.features["vggish"][vid][1])
+                    i3d_flow = np.load(self.features["i3d_flow"][vid][1])
+                    i3d_rgb = np.load(self.features["i3d_rgb"][vid][1])
+
+                sample_i3d_flow = i3d_flow[range(1, i3d_flow.shape[0], 1)]
+                sample_i3d_rgb = i3d_rgb[range(1, i3d_rgb.shape[0], 1)]
+
+                vgg = torch.from_numpy(vgg).float()
+                i3d_flow = torch.from_numpy(sample_i3d_flow).float()
+                i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
+                min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
+                i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
+                item['image_feat'] = i3d
+
             return item
-        
+
         else:
             assert num_options == 100
             cur_rnd_utterance = [self.tokenizer.encode(dialog['caption'])]
@@ -381,7 +461,7 @@ class VisdialDataset(data.Dataset):
             
             for j, option in enumerate(options_all):
                 option, start_segment = pruneRounds(option, self.params['visdial_tot_rounds'])
-                print("option: {} {}".format(j, tokens2str(option)))
+                #print("option: {} {}".format(j, tokens2str(option)))
                 tokens, segments, sep_indices, mask = encode_input(option, start_segment ,self.CLS, 
                 self.SEP, self.MASK ,max_seq_len=MAX_SEQ_LEN, mask_prob=0)
 
@@ -408,15 +488,37 @@ class VisdialDataset(data.Dataset):
             item['round_id'] = torch.LongTensor([dialog['round_id']])
 
             # add image features. Expand them to create batch * num_rounds * num options * num bbox * img feats
+            '''
             features, num_boxes, boxes, _ , image_target = self._image_features_reader[img_id]
             features, spatials, image_mask, image_target, image_label = encode_image_input(features, num_boxes, boxes, \
                                      image_target, max_regions=self._max_region_num, mask_prob=0)
-
+            
             item['image_feat'] = features
             item['image_loc'] = spatials
             item['image_mask'] = image_mask
             item['image_target'] = image_target
             item['image_label'] = image_label
+            '''
+            vid = img_id
+            if self.features is not None:
+                try:
+                    vgg = np.load(self.features["vggish"][vid][0])
+                    i3d_flow = np.load(self.features["i3d_flow"][vid][0])
+                    i3d_rgb = np.load(self.features["i3d_rgb"][vid][0])
+                except KeyError:
+                    vgg = np.load(self.features["vggish"][vid][1])
+                    i3d_flow = np.load(self.features["i3d_flow"][vid][1])
+                    i3d_rgb = np.load(self.features["i3d_rgb"][vid][1])
+
+                sample_i3d_flow = i3d_flow[range(1, i3d_flow.shape[0], 1)]
+                sample_i3d_rgb = i3d_rgb[range(1, i3d_rgb.shape[0], 1)]
+
+                vgg = torch.from_numpy(vgg).float()
+                i3d_flow = torch.from_numpy(sample_i3d_flow).float()
+                i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
+                min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
+                i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
+                item['image_feat'] = i3d
 
             return item
 
@@ -510,10 +612,13 @@ def read_command_line(argv=None):
 
     return parsed
 
+'''
 if __name__ == "__main__":
 
     params= read_command_line()
+
     dataset = VisdialDataset(params)
+
     dataloader = DataLoader(
         dataset,
         batch_size=params['batch_size'] // params['sequences_per_image'] if (
@@ -527,3 +632,4 @@ if __name__ == "__main__":
     for i, batch in dataloader:
         print(i)
         print(batch)
+'''
