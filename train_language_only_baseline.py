@@ -26,6 +26,7 @@ from timeit import default_timer as timer
 
 
 def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=False, sample_size=None, evaluation=False):
+
     input_ids = batch['tokens']
     token_type_ids = batch['segments']
     sep_indices = batch['sep_indices']
@@ -138,6 +139,7 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
                             return_dict=True,
                             mode=1)
             return loss, v_lm_loss, v_nsp_loss
+
         else:
             labels = (labels, i3d)
             # attention_mask = (video_mask, input_mask)
@@ -154,7 +156,7 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
 
 def visdial_evaluate(dataloader, params, eval_batch_size):
     sparse_metrics = SparseGTMetrics()
-    dialog_encoder.eval()
+    model.eval()
     batch_idx = 0
     with torch.no_grad():
         
@@ -163,6 +165,7 @@ def visdial_evaluate(dataloader, params, eval_batch_size):
                          key=lambda x: abs(x - batch_size) if x <= batch_size else float("inf"))
         if params['overfit']:
             batch_size = 100
+
         for epoch_id, _, batch in batch_iter(dataloader, params):
             if epoch_id == 1:
                 break
@@ -178,6 +181,25 @@ def visdial_evaluate(dataloader, params, eval_batch_size):
             mask = mask.view(-1, mask.shape[-1])
             hist_len = batch['hist_len']
             hist_len = hist_len.view(-1)
+            
+            if params['mode'] != 0:
+                    i3d = batch['image_feat'].to(params['device'])
+                    i3d_mask = torch.sum(i3d != 1, dim=2) != 0
+                    input_mask = torch.cat([i3d_mask.to(params['device']), attention_mask], dim=1)
+                    i3d_labels = torch.ones((i3d.size(0), i3d.size(1))).long() * -1
+                    video_mask = torch.cat([torch.zeros((i3d.size(0), i3d.size(1))), torch.ones(labels.size())], 1)
+
+                    # I think the video mask should be flipped for bert..not the same as GPT2
+                    reply_mask = torch.zeros(video_mask.size())
+                    lm_labels = torch.cat([i3d_labels.to(params['device']), labels], dim=1)
+                
+                input_embs = model.module.bert_pretrained.bert.embeddings(input_ids)
+                # input_embs = model.module.bert_pretrained.bert.embeddings(input_ids=input_ids, sep_indices=sep_indices, sep_len=sep_len,  token_type_ids=token_type_ids)
+                video_embs = model.module.bert_pretrained.video_ff(i3d)
+                input_embeds = torch.cat([video_embs, input_embs], dim=1)
+                token_type_ids = torch.cat([torch.ones((i3d.size(0), i3d.size(1))).long().cuda() * 2, token_type_ids], dim=1)
+                lm_logits = model(inputs_embeds=input_embeds, token_type_ids=token_type_ids, attention_mask=input_mask, mode=1)             
+            
             gt_option_inds = batch['gt_option_inds']
             gt_relevance = batch['gt_relevance']
             gt_relevance_round_id = batch['round_id'].squeeze(1)
@@ -218,372 +240,208 @@ if __name__ == '__main__':
     os.makedirs('checkpoints', exist_ok=True)
     if not os.path.exists(params['save_path']):
         os.mkdir(params['save_path'])
+
     viz = VisdomVisualize(
         enable=bool(params['enable_visdom']),
         env_name=params['visdom_env'],
         server=params['visdom_server'],
         port=params['visdom_server_port'])
+
     pprint.pprint(params)
     viz.addText(pprint.pformat(params, indent=4))
 
-	# logger.info(params)
+    dataset = VisdialDataset(params)
 
-	dataset = VisdialDataset(params)
+    dataset.split = 'train'
+    dataloader = DataLoader(
+        dataset,
+        batch_size=params['batch_size'] // params['sequences_per_image'] if (
+            params['batch_size'] // params['sequences_per_image']) \
+        else 1 if not params['overfit'] else 1,
+        shuffle=True,
+        num_workers=params['num_workers'],
+        drop_last=True,
+        pin_memory=False)
 
-	dataset.split = 'train'
-	dataloader = DataLoader(
-	    dataset,
-	    batch_size=params['batch_size'] // params['sequences_per_image'] if (
-			params['batch_size'] // params['sequences_per_image']) \
-		else 1 if not params['overfit'] else 1,
-	    shuffle=True,
-	    num_workers=params['num_workers'],
-	    drop_last=True,
-	    pin_memory=False)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    params['device'] = device
 
-	device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-	params['device'] = device
+    dialog_encoder = DialogEncoder()
 
-	dialog_encoder = DialogEncoder()
+    param_optimizer = list(dialog_encoder.named_parameters())
+    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+    optimizer_grouped_parameters = [
+        {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+        {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    ]
 
-	param_optimizer = list(dialog_encoder.named_parameters())
-	no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
-	optimizer_grouped_parameters = [
-	    {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
-	    {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
-	]
+    optimizer = AdamW(optimizer_grouped_parameters, lr=params['lr'])
+    scheduler = WarmupLinearScheduleNonZero(optimizer, warmup_steps=10000, t_total=200000)
+    start_iter_id = 0
 
-	optimizer = AdamW(optimizer_grouped_parameters, lr=params['lr'])
-	scheduler = WarmupLinearScheduleNonZero(optimizer, warmup_steps=10000, t_total=200000)
-	start_iter_id = 0
+    if params['start_path']:
+        pretrained_dict = torch.load(params['start_path'])
+        
+        if not params['continue']:
+        
+                model_dict = dialog_encoder.state_dict()
+                pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
+                print("pretrained dict", pretrained_dict)
+                assert len(pretrained_dict.keys()) > 0
+                model_dict.update(pretrained_dict)
+                dialog_encoder.load_state_dict(model_dict)
+                
+        else:
+                model_dict = dialog_encoder.state_dict()
+                optimizer_dict = optimizer.state_dict()
+                pretrained_dict_model = pretrained_dict['model_state_dict']
+                pretrained_dict_optimizer = pretrained_dict['optimizer_state_dict']
+                pretrained_dict_scheduler = pretrained_dict['scheduler_state_dict']
+                pretrained_dict_model = {k: v for k, v in pretrained_dict_model.items() if k in model_dict}
+                pretrained_dict_optimizer = {k: v for k, v in pretrained_dict_optimizer.items() if k in optimizer_dict}
+                model_dict.update(pretrained_dict_model)
+                optimizer_dict.update(pretrained_dict_optimizer)
+                dialog_encoder.load_state_dict(model_dict)
+                optimizer.load_state_dict(optimizer_dict)
+                
+                for state in optimizer.state.values():
+                    for k, v in state.items():
+                            if isinstance(v, torch.Tensor):
+                                state[k] = v.cuda()
+                scheduler = WarmupLinearScheduleNonZero(optimizer, warmup_steps=10000, \
+                                    t_total=200000, last_epoch=pretrained_dict["iterId"])
+                scheduler.load_state_dict(pretrained_dict_scheduler)
+                start_iter_id = pretrained_dict['iterId']
 
-	if params['start_path']:
-	    pretrained_dict = torch.load(params['start_path'])
-	    
-	    if not params['continue']:
-		
-		model_dict = dialog_encoder.state_dict()
-		pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-		print("pretrained dict", pretrained_dict)
-		assert len(pretrained_dict.keys()) > 0
-		model_dict.update(pretrained_dict)
-		dialog_encoder.load_state_dict(model_dict)
-	    
-	    else:
-		model_dict = dialog_encoder.state_dict()
-		optimizer_dict = optimizer.state_dict()
-		pretrained_dict_model = pretrained_dict['model_state_dict']
-		pretrained_dict_optimizer = pretrained_dict['optimizer_state_dict']
-		pretrained_dict_scheduler = pretrained_dict['scheduler_state_dict']
-		pretrained_dict_model = {k: v for k, v in pretrained_dict_model.items() if k in model_dict}
-		pretrained_dict_optimizer = {k: v for k, v in pretrained_dict_optimizer.items() if k in optimizer_dict}
-		model_dict.update(pretrained_dict_model)
-		optimizer_dict.update(pretrained_dict_optimizer)
-		dialog_encoder.load_state_dict(model_dict)
-		optimizer.load_state_dict(optimizer_dict)
-		
-		for state in optimizer.state.values():
-		    for k, v in state.items():
-			if isinstance(v, torch.Tensor):
-			    state[k] = v.cuda()
-		scheduler = WarmupLinearScheduleNonZero(optimizer, warmup_steps=10000, \
-							t_total=200000, last_epoch=pretrained_dict["iterId"])
-		scheduler.load_state_dict(pretrained_dict_scheduler)
-		start_iter_id = pretrained_dict['iterId']
+    num_iter_per_epoch = dataset.numDataPoints['train'] // (
+        params['batch_size'] // params['sequences_per_image'] if (params['batch_size'] // params['sequences_per_image']) \
+        else 1 if not params['overfit'] else 5)
 
-	num_iter_per_epoch = dataset.numDataPoints['train'] // (
-	    params['batch_size'] // params['sequences_per_image'] if (params['batch_size'] // params['sequences_per_image']) \
-		else 1 if not params['overfit'] else 5)
+    dialog_encoder = nn.DataParallel(dialog_encoder)
+    dialog_encoder.to(device)
 
-	dialog_encoder = nn.DataParallel(dialog_encoder)
-	dialog_encoder.to(device)
+    start_t = timer()
+    optimizer.zero_grad()
 
-	start_t = timer()
-	optimizer.zero_grad()
+    for epoch_id, idx, batch in batch_iter(dataloader, params):
+        
+        iter_id = start_iter_id + idx + (epoch_id * num_iter_per_epoch)
+        dialog_encoder.train()
+        
+        #import pdb 
+        #pdb.set_trace() 
+        sample_size = 1
 
-	for epoch_id, idx, batch in batch_iter(dataloader, params):
-	    
-	    iter_id = start_iter_id + idx + (epoch_id * num_iter_per_epoch)
-	    dialog_encoder.train()
-	    
-	    if not params['overfit']:
-		loss, lm_loss, nsp_loss = forward(dialog_encoder, batch, params, sample_size=params['batch_size'])
-	    if params['mode'] == 2:
-		vid_loss = forward(dialog_encoder, batch, params, sample_size=params['batch_size'])
-	    else:
-		sample_size = 1
-		loss, lm_loss, nsp_loss = forward(dialog_encoder, batch, params, sample_size=sample_size)
-	    
-	    lm_nsp_loss = None
-	    vid_loss = None
-	    
-	    if lm_loss is not None and nsp_loss is not None:
-		lm_nsp_loss = lm_loss + nsp_loss
-		loss = lm_nsp_loss
-	    else:
-		loss = vid_loss
-	    
-	    loss /= params['batch_multiply']
-	    loss.backward()
-	   
-	    
-	    if iter_id % params['batch_multiply'] == 0 and iter_id > 0:
-		optimizer.step()
-		optimizer.zero_grad()
+        lm_nsp_loss = None
+        vid_loss = None 
+        loss = lm_nsp_loss
 
-	    dataset = VisdialDataset(params)
+        
+        if params['mode'] == 0:
+                loss, lm_loss, nsp_loss  = forward(dialog_encoder, batch, params, sample_size=params['batch_size'] if not params['overfit'] else sample_size)
+        elif params['mode'] ==1:
+                loss, lm_loss, nsp_loss = forward(dialog_encoder, batch, params, sample_size=params['batch_size'] if not params['overfit'] else sample_size)
+        else:
+                vid_loss = forward(dialog_encoder, batch, params, sample_size=params['batch_size'] if not params['overfit'] else sample_size)
 
-	    dataset.split = 'train'
-	    dataloader = DataLoader(
-		dataset,
-		batch_size= params['batch_size']//params['sequences_per_image'] if (params['batch_size']//params['sequences_per_image'])  \
-		    else 1 if not params['overfit'] else 5,
-		shuffle=True,
-		num_workers=params['num_workers'],
-		drop_last=True,
-		pin_memory=False)
+        if lm_loss is not None and nsp_loss is not None:
+            loss = lm_loss + nsp_loss
 
-	    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-	    params['device'] = device
-	    dialog_encoder = DialogEncoder()
+        else:
+            loss = vid_loss
+        
+        loss /= params['batch_multiply']
+        loss.backward()
+        
+        if iter_id % params['batch_multiply'] == 0 and iter_id > 0:
+                optimizer.step()
+                optimizer.zero_grad()
 
-	    scheduler.step()
-	    
-	    if iter_id % 1 == 0:
-		
-		end_t = timer()
-		curEpoch = float(iter_id) / num_iter_per_epoch
-		timeStamp = strftime('%a %d %b %y %X', gmtime())
-		
-		print_vid_loss = 0
-		print_lm_loss = 0
-		print_nsp_loss = 0
-		print_inconsistency_loss = 0
-		print_lm_nsp_loss = 0
-		
-		if lm_loss is not None:
-		    print_lm_loss = lm_loss.item()
-		if nsp_loss is not None:
-		    print_nsp_loss = nsp_loss.item()
-		if lm_nsp_loss is not None:
-		    print_lm_nsp_loss = lm_nsp_loss.item()
-		if vid_loss is not None:
-		    print_vid_loss = vid_loss.item()
-		
-		printFormat = '[%s][Ep: %.2f][Iter: %d][Time: %5.2fs][NSP + LM Loss: %.3g][LM Loss: %.3g][NSP Loss: %.3g]'
-		printInfo = [
-		    timeStamp, curEpoch, iter_id, end_t - start_t, print_lm_nsp_loss, print_lm_loss, print_nsp_loss
-		]
-		
-		'''
-		printFormat = '[%s][Ep: %.2f][Iter: %d][Time: %5.2fs][VidReg Loss: %.3g]'
-		printInfo = [
-		timeStamp, curEpoch, iter_id, end_t - start_t, print_vid_loss
-		]
-		'''
-		print(printFormat % tuple(printInfo))
-		
-		start_t = end_t
-		# Update line plots
-		viz.linePlot(iter_id, loss.item(), 'loss', 'tot loss')
-		
-		if lm_nsp_loss is not None:
-		    viz.linePlot(iter_id, lm_nsp_loss.item(), 'loss', 'lm + nsp loss')
-		if lm_loss is not None:
-		    viz.linePlot(iter_id, lm_loss.item(), 'loss', 'lm loss')
-		if nsp_loss is not None:
-		    viz.linePlot(iter_id, nsp_loss.item(), 'loss', 'nsp loss')
-		if vid_loss is not None:
-		    viz.linePlot(iter_id, vid_loss.item(), 'loss', 'vidReg loss')
-	    
-	    old_num_iter_per_epoch = num_iter_per_epoch
-	    if params['overfit']:
-		num_iter_per_epoch = 1
-	    
-	    if iter_id % num_iter_per_epoch == 0:
-		torch.save(
-		    {'model_state_dict': dialog_encoder.module.state_dict(), 'scheduler_state_dict': scheduler.state_dict() \
-			, 'optimizer_state_dict': optimizer.state_dict(), 'iter_id': iter_id},
-		    os.path.join(params['save_path'], 'visdial_dialog_encoder_%d.ckpt' % iter_id))
-	    
-	    if iter_id % num_iter_per_epoch == 0:
-		viz.save()
-	    '''
-	    # fire evaluation
-	    if ((iter_id % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0) and iter_id > 0:
-		
-		eval_batch_size = 1
-		if params['overfit']:
-		    eval_batch_size = 1
-		
-		dataset.split = 'val'
-		# each image will need 1000 forward passes, (100 at each round x 10 rounds).
-		dataloader = DataLoader(
-		    dataset,
-		    batch_size=eval_batch_size,
-		    shuffle=False,
-		    num_workers=params['num_workers'],
-		    drop_last=True,
-		    pin_memory=False)
-		
-		all_metrics = visdial_evaluate(dataloader, params, eval_batch_size)
-		
-		print("\tr@1: {}".format(all_metrics['r@1']))
-		print("\tr@5: {}".format(all_metrics['r@5']))
-		print("\tr@10: {}".format(all_metrics['r@10']))
-		print("\tmeanR: {}".format(all_metrics['mean']))
-		print("\tmeanRR: {}".format(all_metrics['mrr']))
-		
-	    '''
-	    '''
-		for metric_name, metric_value in all_metrics.items():
-		    print(f"{metric_name}: {metric_value}")
-		    
-		    if 'round' in metric_name:
-			viz.linePlot(iter_id, metric_value, 'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1],
-				     metric_name)
-		    else:
-			viz.linePlot(iter_id, metric_value, 'Retrieval Val Metrics', metric_name)
-	    '''
-	    '''
-		dataset.split = 'train'
-	    '''
-	    num_iter_per_epoch = old_num_iter_per_epoch
+                            
+        if iter_id % 10 == 0:
+        
+                end_t = timer()
+                curEpoch = float(iter_id) / num_iter_per_epoch
+                timeStamp = strftime('%a %d %b %y %X', gmtime())
+                
+                print_vid_loss = 0
+                print_lm_loss = 0
+                print_nsp_loss = 0
+                print_inconsistency_loss = 0
+                print_lm_nsp_loss = 0
+                
+                if lm_loss is not None:
+                    print_lm_loss = lm_loss.item()
+                if nsp_loss is not None:
+                    print_nsp_loss = nsp_loss.item()
+                if lm_nsp_loss is not None:
+                    print_lm_nsp_loss = lm_nsp_loss.item()
+                if vid_loss is not None:
+                    print_vid_loss = vid_loss.item()
+                
+                printFormat = '[%s][Ep: %.2f][Iter: %d][Time: %5.2fs][NSP + LM Loss: %.3g][LM Loss: %.3g][NSP Loss: %.3g]'
+                printInfo = [
+                    timeStamp, curEpoch, iter_id, end_t - start_t, print_lm_nsp_loss, print_lm_loss, print_nsp_loss
+                ]
+                
+               
+                printFormat = '[%s][Ep: %.2f][Iter: %d][Time: %5.2fs][VidReg Loss: %.3g]'
+                printInfo = [
+                timeStamp, curEpoch, iter_id, end_t - start_t, print_vid_loss
+                ]
+               
+                print(printFormat % tuple(printInfo))
+                
+                start_t = end_t
+                # Update line plots
+                viz.linePlot(iter_id, loss.item(), 'loss', 'tot loss')
+                
+                if lm_nsp_loss is not None:
+                    viz.linePlot(iter_id, lm_nsp_loss.item(), 'loss', 'lm + nsp loss')
+                if lm_loss is not None:
+                    viz.linePlot(iter_id, lm_loss.item(), 'loss', 'lm loss')
+                if nsp_loss is not None:
+                    viz.linePlot(iter_id, nsp_loss.item(), 'loss', 'nsp loss')
+                if vid_loss is not None:
+                    viz.linePlot(iter_id, vid_loss.item(), 'loss', 'vidReg loss')
+                
+        old_num_iter_per_epoch = num_iter_per_epoch
+        if params['overfit']:
+            num_iter_per_epoch = 1
+        '''
+        if iter_id % num_iter_per_epoch == 0:
+                torch.save(
+                    {'model_state_dict': dialog_encoder.module.state_dict(), 'scheduler_state_dict': scheduler.state_dict() \
+                    , 'optimizer_state_dict': optimizer.state_dict(), 'iter_id': iter_id},
+                    os.path.join(params['save_path'], 'visdial_dialog_encoder_%d.ckpt' % iter_id))
+                
+        if iter_id % num_iter_per_epoch == 0:
+            viz.save()
+       
+        print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
+        if  ((iter_id % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0) and iter_id > 0:
+            eval_batch_size = 2
+            if params['overfit']:
+                eval_batch_size = 5
+            
+            dataset.split = 'val'
+            # each image will need 1000 forward passes, (100 at each round x 10 rounds).
+            dataloader = DataLoader(
+                dataset,
+                batch_size=eval_batch_size,
+                shuffle=False,
+                num_workers=params['num_workers'],
+                drop_last=True,
+                pin_memory=False)
+            all_metrics = visdial_evaluate(dataloader, params, eval_batch_size)
+            for metric_name, metric_value in all_metrics.items():
+                print(f"{metric_name}: {metric_value}")
+                if 'round' in metric_name:
+                    viz.linePlot(iter_id, metric_value, 'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1], metric_name)
+                else:
+                    viz.linePlot(iter_id, metric_value, 'Retrieval Val Metrics', metric_name)
+            
+            dataset.split = 'train'
 
-	    optimizer = AdamW(optimizer_grouped_parameters, lr=params['lr'])
-	    scheduler = WarmupLinearScheduleNonZero(optimizer, warmup_steps=10000, t_total=200000)
-	    start_iter_id = 0
-
-	    if params['start_path']:
-		pretrained_dict = torch.load(params['start_path'])
-		if not params['continue']:
-		    model_dict = dialog_encoder.state_dict()
-		    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
-		    print("pretrained dict", pretrained_dict)
-		    assert len(pretrained_dict.keys()) > 0
-		    model_dict.update(pretrained_dict)
-		    dialog_encoder.load_state_dict(model_dict)
-		else:
-		    model_dict = dialog_encoder.state_dict()
-		    optimizer_dict = optimizer.state_dict()
-		    pretrained_dict_model = pretrained_dict['model_state_dict']
-		    pretrained_dict_optimizer = pretrained_dict['optimizer_state_dict']
-		    pretrained_dict_scheduler = pretrained_dict['scheduler_state_dict']
-		    pretrained_dict_model = {k: v for k, v in pretrained_dict_model.items() if k in model_dict}
-		    pretrained_dict_optimizer = {k: v for k, v in pretrained_dict_optimizer.items() if k in optimizer_dict}
-		    model_dict.update(pretrained_dict_model)
-		    optimizer_dict.update(pretrained_dict_optimizer)
-		    dialog_encoder.load_state_dict(model_dict)
-		    optimizer.load_state_dict(optimizer_dict)
-		    for state in optimizer.state.values():
-			for k, v in state.items():
-			    if isinstance(v, torch.Tensor):
-				state[k] = v.cuda()
-		    scheduler = WarmupLinearScheduleNonZero(optimizer, warmup_steps=10000, \
-			 t_total=200000, last_epoch=pretrained_dict["iterId"])
-		    scheduler.load_state_dict(pretrained_dict_scheduler)
-		    start_iter_id = pretrained_dict['iterId']
-		    
-	    num_iter_per_epoch = dataset.numDataPoints['train'] // (params['batch_size'] // params['sequences_per_image'] if (params['batch_size'] // params['sequences_per_image']) \
-		 else 1 if not params['overfit'] else 5 )
-	    print('\n%d iter per epoch.' % num_iter_per_epoch)
-
-	    dialog_encoder = nn.DataParallel(dialog_encoder)
-	    dialog_encoder.to(device)
-
-	    start_t = timer()
-	    optimizer.zero_grad()
-	    for epoch_id, idx, batch in batch_iter(dataloader, params):
-		
-		iter_id = start_iter_id + idx + (epoch_id * num_iter_per_epoch)
-	       
-		dialog_encoder.train()
-		if not params['overfit']:
-		    loss, lm_loss, nsp_loss = forward(dialog_encoder, batch, params, sample_size=params['batch_size'])
-		else:
-		    sample_size = 48
-		    loss, lm_loss, nsp_loss = forward(dialog_encoder, batch, params, sample_size=sample_size)
-
-		lm_nsp_loss = None
-		if lm_loss is not None and nsp_loss is not None:
-		    lm_nsp_loss = lm_loss + nsp_loss
-
-		loss /= params['batch_multiply']
-		loss.backward()        
-		scheduler.step()
-
-		if iter_id % params['batch_multiply'] == 0 and iter_id > 0:
-		    optimizer.step()
-		    optimizer.zero_grad()
-		
-				
-		if iter_id % 10 == 0:
-		    end_t = timer()
-		    curEpoch = float(iter_id) / num_iter_per_epoch
-		    timeStamp = strftime('%a %d %b %y %X', gmtime())
-		    print_lm_loss = 0
-		    print_nsp_loss = 0
-		    print_inconsistency_loss = 0
-		    print_lm_nsp_loss = 0
-
-		    if lm_loss is not None:
-			print_lm_loss = lm_loss.item()
-		    if nsp_loss is not None:
-			print_nsp_loss = nsp_loss.item()
-		    if lm_nsp_loss is not None:
-			print_lm_nsp_loss = lm_nsp_loss.item()
-
-		    printFormat = '[%s][Ep: %.2f][Iter: %d][Time: %5.2fs][NSP + LM Loss: %.3g][LM Loss: %.3g][NSP Loss: %.3g]'
-		    printInfo = [
-			timeStamp, curEpoch, iter_id, end_t - start_t, print_lm_nsp_loss, print_lm_loss, print_nsp_loss
-		    ]
-		    print(printFormat % tuple(printInfo))
-		    start_t = end_t
-
-		    # Update line plots
-		    viz.linePlot(iter_id, loss.item(), 'loss', 'tot loss')
-		    if lm_nsp_loss is not None:
-			viz.linePlot(iter_id, lm_nsp_loss.item(), 'loss', 'lm + nsp loss')
-		    if lm_loss is not None:
-			viz.linePlot(iter_id, lm_loss.item(),'loss', 'lm loss')
-		    if nsp_loss is not None:
-			viz.linePlot(iter_id, nsp_loss.item(), 'loss', 'nsp loss')
-
-		old_num_iter_per_epoch = num_iter_per_epoch
-		if params['overfit']:
-		    num_iter_per_epoch = 100
-		if iter_id % num_iter_per_epoch == 0 and iter_id > 0:
-		    torch.save({'model_state_dict' : dialog_encoder.module.state_dict(),'scheduler_state_dict':scheduler.state_dict() \
-			 ,'optimizer_state_dict': optimizer.state_dict(), 'iter_id':iter_id}, os.path.join(params['save_path'], 'visdial_dialog_encoder_%d.ckpt'%iter_id))
-
-		if iter_id % num_iter_per_epoch == 0 and iter_id > 0:
-		    viz.save()
-		# fire evaluation 
-		
-		if  ((iter_id  % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0) and iter_id > 0:
-		    print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
-		    eval_batch_size = 2
-		    if params['overfit']:
-			eval_batch_size = 5
-		    
-		    dataset.split = 'val'
-		    # each image will need 1000 forward passes, (100 at each round x 10 rounds).
-		    dataloader = DataLoader(
-			dataset,
-			batch_size=eval_batch_size,
-			shuffle=False,
-			num_workers=params['num_workers'],
-			drop_last=True,
-			pin_memory=False)
-
-		    all_metrics = visdial_evaluate(dataloader, params, eval_batch_size)
-		    for metric_name, metric_value in all_metrics.items():
-			print(f"{metric_name}: {metric_value}")
-			if 'round' in metric_name:
-			    viz.linePlot(iter_id, metric_value, 'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1], metric_name)
-			else:
-			    viz.linePlot(iter_id, metric_value, 'Retrieval Val Metrics', metric_name)
-		    
-		    dataset.split = 'train'
-
-		num_iter_per_epoch = old_num_iter_per_epoch
+        num_iter_per_epoch = old_num_iter_per_epoch
+        '''

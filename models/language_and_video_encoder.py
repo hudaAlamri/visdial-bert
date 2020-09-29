@@ -10,7 +10,7 @@ class DialogEncoder(nn.Module):
 
     def __init__(self):
         super(DialogEncoder, self).__init__()
-        config = BertConfig.from_json_file('/home/halamri/visdial-bert/config/bert_base_baseline.json')
+        config = BertConfig.from_json_file('/nethome/halamri3/visdial-bert/config/bert_base_baseline.json')
         self.bert_pretrained = BertForPretrainingDialog.from_pretrained('bert-base-uncased', output_hidden_states=True)
         self.bert_pretrained.train()
         # add additional layers for the inconsistency loss
