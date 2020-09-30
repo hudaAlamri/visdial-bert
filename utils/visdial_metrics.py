@@ -49,9 +49,8 @@ class SparseGTMetrics(object):
         self._rank_list_rnd = []
         self.num_rounds = None
 
-    def observe(
-        self, predicted_scores: torch.Tensor, target_ranks: torch.Tensor
-    ):
+    def observe(self, predicted_scores: torch.Tensor, target_ranks: torch.Tensor):
+
         predicted_scores = predicted_scores.detach()
 
         # shape: (batch_size, num_rounds, num_options)
@@ -103,6 +102,8 @@ class SparseGTMetrics(object):
                 metrics["r_10" + "_round_" + str(rnd)] = r_10_rnd[rnd-1]
                 metrics["mean" + "_round_" + str(rnd)] = mean_rnd[rnd-1]
                 metrics["mrr" + "_round_" + str(rnd)] = mrr_rnd[rnd-1]
+
+
         else:
             metrics = {}
 

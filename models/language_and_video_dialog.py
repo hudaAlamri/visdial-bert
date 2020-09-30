@@ -77,9 +77,13 @@ class BertEmbeddingsDialog(BertEmbeddings):
         token_type_embeddings = (token_type_embeddings * token_type_ids_mask.unsqueeze(-1)) + \
                                (token_type_embeddings_extension * token_type_ids_extension_mask.unsqueeze(-1))
         '''
-        embeddings = inputs_embeds + position_embeddings + token_type_embeddings
-        embeddings = self.LayerNorm(embeddings)
-        embeddings = self.dropout(embeddings)
+        try:
+            embeddings = inputs_embeds + position_embeddings + token_type_embeddings
+            embeddings = self.LayerNorm(embeddings)
+            embeddings = self.dropout(embeddings)
+        except:
+            print('check this out!')
+            
         return embeddings
 
 class BertModelDialog(BertModel):
@@ -400,7 +404,7 @@ class BertForPretrainingDialog(BertForPreTraining):
             lm_loss = masked_lm_loss + next_sentence_loss
 
 
-        #lm_video_regs = self.video_inverse_ff((hidden_states[:, :labels[1].size(1), :]))
+        lm_video_regs = self.video_inverse_ff((hidden_states[:, :labels[1].size(1), :]))
 
         if not return_dict:
             output = (prediction_scores, seq_relationship_score) + outputs[2:]

@@ -4,6 +4,10 @@ import h5py
 
 
 path  = '../data/Charades/data_video.h5'
+
+pre_extracted_features_path = '/home/halamri/data/Charades_v1_features_rgb/'
+features_type = 'RGB'
+
 max_ques_count = 10
 
 vid_file = h5py.File(path,'r')

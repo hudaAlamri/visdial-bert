@@ -1,0 +1,1256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="237a154b-b1d0-4987-97ab-7924cf0f8321" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/charades_preprocess/charades_features.py" beforeDir="false" afterPath="$PROJECT_DIR$/charades_preprocess/charades_features.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/bert_base_baseline.json" beforeDir="false" afterPath="$PROJECT_DIR$/config/bert_base_baseline.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/dataloader/dataloader_visdial.py" beforeDir="false" afterPath="$PROJECT_DIR$/dataloader/dataloader_visdial.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/evaluate.py" beforeDir="false" afterPath="$PROJECT_DIR$/evaluate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/language_and_video_dialog.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/language_and_video_dialog.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/language_and_video_encoder.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/language_and_video_encoder.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/models/language_only_dialog.py" beforeDir="false" afterPath="$PROJECT_DIR$/models/language_only_dialog.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/options.py" beforeDir="false" afterPath="$PROJECT_DIR$/options.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_language_only_baseline.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_language_only_baseline.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/train_language_only_baseline_2.py" beforeDir="false" afterPath="$PROJECT_DIR$/train_language_only_baseline_2.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/utils/visdial_metrics.py" beforeDir="false" afterPath="$PROJECT_DIR$/utils/visdial_metrics.py" afterDir="false" />
+    </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CoverageDataManager">
+    <SUITE FILE_PATH="coverage/visdial_bert$train_language_only_baseline.coverage" NAME="train_language_only_baseline Coverage Results" MODIFIED="1601495193771" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/visdial_bert$language_only_dialog_encoder.coverage" NAME="language_only_dialog_encoder Coverage Results" MODIFIED="1578409465291" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models" />
+    <SUITE FILE_PATH="coverage/visdial_bert$dataloader_visdial.coverage" NAME="dataloader_visdial Coverage Results" MODIFIED="1589337366779" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/dataloader" />
+    <SUITE FILE_PATH="coverage/visdial_bert$charades_features.coverage" NAME="charades_features Coverage Results" MODIFIED="1577917335643" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/charades_preprocess" />
+    <SUITE FILE_PATH="coverage/visdial_bert$preprocess.coverage" NAME="preprocess Coverage Results" MODIFIED="1580999126054" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/charades_preprocess" />
+    <SUITE FILE_PATH="coverage/visdial_bert$train_language_only_baseline_2.coverage" NAME="train_language_only_baseline_2 Coverage Results" MODIFIED="1600794516542" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/visdial_bert$language_only_dialog.coverage" NAME="language_only_dialog Coverage Results" MODIFIED="1577999470786" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/models" />
+    <SUITE FILE_PATH="coverage/visdial_bert$evaluate.coverage" NAME="evaluate Coverage Results" MODIFIED="1600448780090" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/visdial_bert$eval_utils.coverage" NAME="eval_utils Coverage Results" MODIFIED="1578436944304" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/utils" />
+    <SUITE FILE_PATH="coverage/visdial_bert$train.coverage" NAME="train Coverage Results" MODIFIED="1586049210237" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+  </component>
+  <component name="DatabaseView">
+    <option name="SHOW_INTERMEDIATE" value="true" />
+    <option name="GROUP_DATA_SOURCES" value="true" />
+    <option name="GROUP_SCHEMA" value="true" />
+    <option name="GROUP_CONTENTS" value="false" />
+    <option name="SORT_POSITIONED" value="false" />
+    <option name="SHOW_EMPTY_GROUPS" value="false" />
+    <option name="AUTO_SCROLL_FROM_SOURCE" value="false" />
+    <option name="HIDDEN_KINDS">
+      <set />
+    </option>
+    <expand />
+    <select />
+  </component>
+  <component name="FileEditorManager">
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/utils/data_utils.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="336">
+              <caret line="16" selection-start-line="16" selection-end-line="16" />
+              <folding>
+                <element signature="e#0#12#0" expanded="true" />
+                <element signature="e#3181#4810#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/dataloader/dataloader_visdial.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1904">
+              <caret line="317" selection-start-line="317" selection-end-line="317" />
+              <folding>
+                <element signature="e#0#12#0" expanded="true" />
+                <element signature="e#1336#3871#0" />
+                <element signature="e#6263#8664#0" />
+                <element signature="e#9152#11416#0" />
+                <element signature="e#24464#30472#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/train_language_only_baseline.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="221">
+              <caret line="145" selection-start-line="145" selection-end-line="145" />
+              <folding>
+                <element signature="e#0#12#0" expanded="true" />
+                <element signature="e#6502#10869#0" />
+                <element signature="e#7621#9057#1" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/models/language_and_video_encoder.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="200">
+              <caret line="55" column="17" selection-start-line="55" selection-start-column="16" selection-end-line="55" selection-end-column="93" />
+              <folding>
+                <element signature="e#0#12#0" expanded="true" />
+                <element signature="e#396#798#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/models/language_and_video_dialog.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="200">
+              <caret line="207" selection-start-line="207" selection-end-line="207" />
+              <folding>
+                <element signature="e#0#15#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/nn/modules/linear.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="208">
+              <caret line="86" selection-start-line="86" selection-end-line="86" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/nn/modules/module.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="146">
+              <caret line="540" selection-start-line="540" selection-end-line="540" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/options.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="282">
+              <caret line="14" selection-start-line="14" selection-end-line="14" />
+              <folding>
+                <element signature="e#0#9#0" expanded="true" />
+                <element signature="e#2152#2226#0" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+    </leaf>
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>logger</find>
+      <find>num iteration for eval</find>
+      <find>train</find>
+      <find>traini</find>
+      <find>visdom_server_port</find>
+      <find>read</find>
+      <find>read_c</find>
+      <find>sample</find>
+      <find>sample_size</find>
+      <find>[TrainingLoss]</find>
+      <find>tokens</find>
+      <find>mask</find>
+      <find>attention_mask_lm_nsp</find>
+      <find>position_ids</find>
+      <find>.step</find>
+      <find>datalo</find>
+    </findStrings>
+    <replaceStrings>
+      <replace>input_ids</replace>
+      <replace>labels</replace>
+      <replace>attention_mask</replace>
+    </replaceStrings>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/utils/image_features_reader.py" />
+        <option value="$PROJECT_DIR$/charades_preprocess/preprocess.py" />
+        <option value="$PROJECT_DIR$/utils/data_utils.py" />
+        <option value="$PROJECT_DIR$/utils/__init__.py" />
+        <option value="$PROJECT_DIR$/charades_preprocess/charades_features.py" />
+        <option value="$PROJECT_DIR$/models/vilbert_dialog.py" />
+        <option value="$PROJECT_DIR$/utils/visdial_metrics.py" />
+        <option value="$PROJECT_DIR$/evaluate.py" />
+        <option value="$PROJECT_DIR$/utils/visualize.py" />
+        <option value="$PROJECT_DIR$/models/language_only_dialog_encoder.py" />
+        <option value="$PROJECT_DIR$/train_language_only_baseline_2.py" />
+        <option value="$PROJECT_DIR$/models/language_only_dialog.py" />
+        <option value="$PROJECT_DIR$/config/bert_base_baseline.json" />
+        <option value="$PROJECT_DIR$/options.py" />
+        <option value="$PROJECT_DIR$/dataloader/dataloader_visdial.py" />
+        <option value="$PROJECT_DIR$/train_language_only_baseline.py" />
+        <option value="$PROJECT_DIR$/models/language_and_video_dialog.py" />
+        <option value="$PROJECT_DIR$/models/language_and_video_encoder.py" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="69" />
+    <option name="y" value="81" />
+    <option name="width" value="1867" />
+    <option name="height" value="1053" />
+  </component>
+  <component name="ProjectView">
+    <navigator proportions="" version="1">
+      <foldersAlwaysOnTop value="true" />
+    </navigator>
+    <panes>
+      <pane id="Scope">
+        <subPane subId="Scope 'Changed Files'; set:Changed Files; ALL; class com.intellij.packageDependencies.ChangeListScope">
+          <expand>
+            <path>
+              <item name="visdial-bert" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
+              <item name="" type="442cc68d:ScopeViewTreeModel$RootNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+      <pane id="ProjectPane">
+        <subPane>
+          <expand>
+            <path>
+              <item name="visdial-bert" type="b2602c69:ProjectViewProjectNode" />
+              <item name="visdial-bert" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="visdial-bert" type="b2602c69:ProjectViewProjectNode" />
+              <item name="visdial-bert" type="462c0819:PsiDirectoryNode" />
+              <item name="data" type="462c0819:PsiDirectoryNode" />
+            </path>
+          </expand>
+          <select />
+        </subPane>
+      </pane>
+    </panes>
+  </component>
+  <component name="PropertiesComponent">
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+    <property name="settings.editor.selected.configurable" value="preferences.sourceCode.Python" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/models" />
+      <recent name="$PROJECT_DIR$/config" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/utils" />
+      <recent name="$PROJECT_DIR$/data/Charades" />
+    </key>
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
+  </component>
+  <component name="RunManager" selected="Python.train_language_only_baseline">
+    <configuration name="dataloader_visdial" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="visdial-bert" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/dataloader" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/dataloader/dataloader_visdial.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="eval_utils" type="PythonConfigurationType" factoryName="Python">
+      <module name="visdial-bert" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/utils" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/utils/eval_utils.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="evaluate" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="visdial-bert" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/evaluate.py" />
+      <option name="PARAMETERS" value="-n_gpus 1 -start_path checkpoints/debug_0107/visdial_dialog_encoder_0.ckpt" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="language_only_dialog" type="PythonConfigurationType" factoryName="Python">
+      <module name="visdial-bert" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/models" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/models/language_only_dialog.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="language_only_dialog_encoder" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="visdial-bert" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/models" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/models/language_only_dialog_encoder.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="preprocess" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="visdial-bert" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/charades_preprocess" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/charades_preprocess/preprocess.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train" type="PythonConfigurationType" factoryName="Python">
+      <module name="visdial-bert" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train_language_only_baseline" type="PythonConfigurationType" factoryName="Python">
+      <module name="visdial-bert" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_language_only_baseline.py" />
+      <option name="PARAMETERS" value="-enable_visdom 1 -visdom_server 127.0.0.1 -visdom_server_port 8080 -batch_size 3 -lr 4e-05 -image_lr 2e-05 -batch_multiply 1 -num_options 100 -lm_loss_coeff 1 -num_epochs 10 -mask_prob 0.1 -n_gpus 1 -sequences_per_image 8 -nsp_loss_coeff 1 -num_negative_samples 1 -visdial_tot_rounds 11 -save_name video_language_Sep29 -mode=1" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="train_language_only_baseline_2" type="PythonConfigurationType" factoryName="Python" temporary="true">
+      <module name="visdial-bert" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/train_language_only_baseline_2.py" />
+      <option name="PARAMETERS" value="-enable_visdom 1 -visdom_server 127.0.0.1 -batch_size 1 -lr 4e-05 -image_lr 2e-05 -batch_multiply 1 -num_options 100 -lm_loss_coeff 1 -num_epochs 10 -mask_prob 0.1 -n_gpus 1 -sequences_per_image 8 -nsp_loss_coeff 1 -num_negative_samples 1 -visdial_tot_rounds 11 -visdom_env sep19 -save_name sep19 -visdom_server_port 8833" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.eval_utils" />
+      <item itemvalue="Python.language_only_dialog" />
+      <item itemvalue="Python.train" />
+      <item itemvalue="Python.train_language_only_baseline" />
+      <item itemvalue="Python.dataloader_visdial" />
+      <item itemvalue="Python.evaluate" />
+      <item itemvalue="Python.language_only_dialog_encoder" />
+      <item itemvalue="Python.preprocess" />
+      <item itemvalue="Python.train_language_only_baseline_2" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.train_language_only_baseline_2" />
+        <item itemvalue="Python.evaluate" />
+        <item itemvalue="Python.dataloader_visdial" />
+        <item itemvalue="Python.preprocess" />
+        <item itemvalue="Python.language_only_dialog_encoder" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="237a154b-b1d0-4987-97ab-7924cf0f8321" name="Default Changelist" comment="" />
+      <created>1576185369278</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1576185369278</updated>
+      <workItem from="1576185370551" duration="7167000" />
+      <workItem from="1576616878572" duration="21603000" />
+      <workItem from="1577917281428" duration="4917000" />
+      <workItem from="1577983394805" duration="1320000" />
+      <workItem from="1577999276039" duration="13295000" />
+      <workItem from="1578408266337" duration="605000" />
+      <workItem from="1578409421684" duration="22465000" />
+      <workItem from="1578436704587" duration="28617000" />
+      <workItem from="1580998885557" duration="1960000" />
+      <workItem from="1581512889073" duration="757000" />
+      <workItem from="1581513879626" duration="649000" />
+      <workItem from="1581518171144" duration="1428000" />
+      <workItem from="1583850770527" duration="1318000" />
+      <workItem from="1586049054027" duration="1555000" />
+      <workItem from="1586051777223" duration="52000" />
+      <workItem from="1588044216016" duration="4195000" />
+      <workItem from="1589224274095" duration="2515000" />
+      <workItem from="1589309428757" duration="9427000" />
+      <workItem from="1589674925927" duration="25535000" />
+      <workItem from="1589809287944" duration="23000" />
+      <workItem from="1589816103647" duration="823000" />
+      <workItem from="1590445580922" duration="56623000" />
+      <workItem from="1590678308248" duration="27000" />
+      <workItem from="1591705904543" duration="2704000" />
+      <workItem from="1591980068511" duration="3127000" />
+      <workItem from="1592249701234" duration="7262000" />
+      <workItem from="1592481348852" duration="13449000" />
+      <workItem from="1592574075100" duration="12084000" />
+      <workItem from="1592848091530" duration="235000" />
+      <workItem from="1593007990485" duration="2120000" />
+      <workItem from="1596064875975" duration="1627000" />
+      <workItem from="1596722680368" duration="17929000" />
+      <workItem from="1596978167275" duration="4569000" />
+      <workItem from="1597065457988" duration="4267000" />
+      <workItem from="1598370659850" duration="2756000" />
+      <workItem from="1598541514027" duration="3670000" />
+      <workItem from="1599137822431" duration="1754000" />
+      <workItem from="1599139933191" duration="15265000" />
+      <workItem from="1599675375968" duration="77197000" />
+      <workItem from="1600869114211" duration="13293000" />
+      <workItem from="1600888389033" duration="2168000" />
+      <workItem from="1600963762466" duration="28780000" />
+      <workItem from="1601058403958" duration="1540000" />
+      <workItem from="1601062148678" duration="543000" />
+      <workItem from="1601062710557" duration="51000" />
+      <workItem from="1601062805043" duration="8569000" />
+      <workItem from="1601321034112" duration="1985000" />
+      <workItem from="1601391810098" duration="35683000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TimeTrackingManager">
+    <option name="totallyTimeSpent" value="469503000" />
+  </component>
+  <component name="ToolWindowManager">
+    <frame x="49" y="-3" width="1871" height="1203" extended-state="6" />
+    <layout>
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.09195402" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32996324" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.26194853" />
+      <window_info anchor="bottom" id="Cvs" order="3" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="4" weight="0.4" />
+      <window_info active="true" anchor="bottom" id="Debug" order="5" sideWeight="0.49972633" visible="true" weight="0.46139705" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" weight="0.4751838" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.50027364" side_tool="true" weight="0.3740809" />
+      <window_info anchor="bottom" id="Terminal" order="11" weight="0.38235295" />
+      <window_info anchor="bottom" id="Python Console" order="12" weight="0.25459558" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="SciView" order="3" weight="0.32950193" />
+      <window_info anchor="right" id="Database" order="4" weight="0.32950193" />
+    </layout>
+    <layout-to-restore>
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.14394766" />
+      <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
+      <window_info id="Favorites" order="2" side_tool="true" />
+      <window_info anchor="bottom" id="Message" order="0" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.32996324" />
+      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.5499485" />
+      <window_info anchor="bottom" id="Cvs" order="3" weight="0.25" />
+      <window_info anchor="bottom" id="Inspection" order="4" weight="0.4" />
+      <window_info anchor="bottom" id="Debug" order="5" weight="0.4898897" />
+      <window_info anchor="bottom" id="TODO" order="6" />
+      <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
+      <window_info anchor="bottom" id="Version Control" order="8" />
+      <window_info anchor="bottom" id="Database Changes" order="9" />
+      <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
+      <window_info anchor="bottom" id="Terminal" order="11" weight="0.21047795" />
+      <window_info anchor="bottom" id="Python Console" order="12" weight="0.5992647" />
+      <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
+      <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
+      <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
+      <window_info anchor="right" id="SciView" order="3" weight="0.32950193" />
+      <window_info anchor="right" id="Database" order="4" weight="0.32950193" />
+    </layout-to-restore>
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/charades_preprocess/preprocess.py</url>
+          <line>22</line>
+          <option name="timeStamp" value="4" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/charades_preprocess/charades_features.py</url>
+          <line>24</line>
+          <option name="timeStamp" value="36" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/charades_preprocess/charades_features.py</url>
+          <line>5</line>
+          <option name="timeStamp" value="37" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/charades_preprocess/charades_features.py</url>
+          <line>18</line>
+          <option name="timeStamp" value="38" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/train.py</url>
+          <line>244</line>
+          <option name="timeStamp" value="156" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/train_language_only_baseline.py</url>
+          <line>182</line>
+          <option name="timeStamp" value="262" />
+        </line-breakpoint>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/train_language_only_baseline.py</url>
+          <line>184</line>
+          <option name="timeStamp" value="263" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/utils/visdial_metrics.py</url>
+          <line>94</line>
+          <option name="timeStamp" value="318" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/evaluate.py</url>
+          <line>102</line>
+          <option name="timeStamp" value="413" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/train_language_only_baseline_2.py</url>
+          <line>348</line>
+          <option name="timeStamp" value="414" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/train_language_only_baseline_2.py</url>
+          <line>86</line>
+          <option name="timeStamp" value="424" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/train_language_only_baseline_2.py</url>
+          <line>265</line>
+          <option name="timeStamp" value="428" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/train_language_only_baseline.py</url>
+          <line>139</line>
+          <option name="timeStamp" value="586" />
+        </line-breakpoint>
+      </breakpoints>
+      <default-breakpoints>
+        <breakpoint type="python-exception">
+          <properties notifyOnTerminate="true" exception="BaseException">
+            <option name="notifyOnTerminate" value="true" />
+          </properties>
+        </breakpoint>
+      </default-breakpoints>
+    </breakpoint-manager>
+  </component>
+  <component name="debuggerHistoryManager">
+    <expressions id="evaluateCodeFragment">
+      <expression>
+        <expression-string>parser.add_argument('-mask_prob',default=0.15,type=float,help='prob used to sample masked tokens')</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>i</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>from torch.nn.utils.weight_norm import weight_norm
+from torch import nn
+in_dim = 1024
+hid_dim =in_dim * 2
+
+layers = [
+    weight_norm(nn.Linear(in_dim, hid_dim), dim=None),
+    nn.ReLU(),
+nn.Dropout(dropout, inplace=True),
+    weight_norm(nn.Linear(hid_dim, out_dim), dim=None)
+]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>from torch.nn.utils.weight_norm import weight_norm
+from torch import nn
+in_dim = 1024
+hid_dim =in_dim * 2
+
+layers = [
+    weight_norm(nn.Linear(in_dim, hid_dim), dim=None),
+    nn.ReLU(),
+    nn.Dropout(dropout, inplace=True),
+    weight_norm(nn.Linear(hid_dim, out_dim), dim=None)
+]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>from torch.nn.utils.weight_norm import weight_norm
+from torch import nn
+layers = [
+    weight_norm(nn.Linear(in_dim, hid_dim), dim=None),
+    nn.ReLU(),
+    nn.Dropout(dropout, inplace=True),
+    weight_norm(nn.Linear(hid_dim, out_dim), dim=None)
+]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>from torch.nn.utils.weight_norm import weight_norm
+
+layers = [
+    weight_norm(nn.Linear(in_dim, hid_dim), dim=None),
+    nn.ReLU(),
+    nn.Dropout(dropout, inplace=True),
+    weight_norm(nn.Linear(hid_dim, out_dim), dim=None)
+]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>layers = [
+    weight_norm(nn.Linear(in_dim, hid_dim), dim=None),
+    nn.ReLU(),
+    nn.Dropout(dropout, inplace=True),
+    weight_norm(nn.Linear(hid_dim, out_dim), dim=None)
+]</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>(iter_id+1) % num_iter_per_epoch</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>iter_id+1 % num_iter_per_epoch</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+      <expression>
+        <expression-string>iter_id</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>CODE_FRAGMENT</evaluation-mode>
+      </expression>
+    </expressions>
+    <expressions id="evaluateExpression">
+      <expression>
+        <expression-string>from utils import process_ranks, scores_to_ranks, get_gt_ranks</expression-string>
+        <language-id>Python</language-id>
+        <evaluation-mode>EXPRESSION</evaluation-mode>
+      </expression>
+    </expressions>
+  </component>
+  <component name="editorHistoryManager">
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydevd_bundle/pydevd_exec2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="42">
+          <caret line="2" selection-start-line="2" selection-end-line="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/nn/functional.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1013">
+          <caret line="1233" selection-start-line="1233" selection-end-line="1233" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/nn/modules/activation.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1013">
+          <caret line="981" selection-start-line="981" selection-end-line="981" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/warnings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8442">
+          <caret line="402" selection-start-line="402" selection-end-line="402" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/vilbert_dialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="259" selection-start-line="259" selection-end-line="259" />
+          <folding>
+            <element signature="n#!!doc" />
+            <element signature="e#1275#2057#0" />
+            <element signature="e#2119#4448#0" />
+            <element signature="e#4468#4834#0" />
+            <element signature="e#4855#4882#0" />
+            <element signature="e#11346#12118#0" />
+            <element signature="e#12163#15291#0" />
+            <element signature="e#13664#15291#0" />
+            <element signature="e#15333#17948#0" />
+            <element signature="e#17987#18517#0" />
+            <element signature="e#18555#18967#0" />
+            <element signature="e#19009#19622#0" />
+            <element signature="e#19658#20190#0" />
+            <element signature="e#20225#20765#0" />
+            <element signature="e#20813#23477#0" />
+            <element signature="e#23521#24064#0" />
+            <element signature="e#24107#24534#0" />
+            <element signature="e#24581#25211#0" />
+            <element signature="e#25252#25797#0" />
+            <element signature="e#25837#26397#0" />
+            <element signature="e#26438#31787#0" />
+            <element signature="e#31824#33111#0" />
+            <element signature="e#33155#34368#0" />
+            <element signature="e#34404#40873#0" />
+            <element signature="e#40913#41432#0" />
+            <element signature="e#41472#41994#0" />
+            <element signature="e#42046#42779#0" />
+            <element signature="e#42834#43578#0" />
+            <element signature="e#43623#44418#0" />
+            <element signature="e#43689#44232#0" />
+            <element signature="e#44458#44785#0" />
+            <element signature="e#44825#45112#0" />
+            <element signature="e#45157#46253#0" />
+            <element signature="e#46301#46826#0" />
+            <element signature="e#46870#55480#0" />
+            <element signature="e#55525#62496#0" />
+            <element signature="e#62540#63352#0" />
+            <element signature="e#63415#66929#0" />
+            <element signature="e#66981#69590#0" />
+            <element signature="e#69631#70081#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/visual_dialog_encoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="210">
+          <caret line="10" selection-start-line="10" selection-end-line="10" />
+          <folding>
+            <element signature="e#0#11#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/serialization.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="336">
+          <caret line="429" selection-start-line="429" selection-end-line="429" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/argparse.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="149">
+          <caret line="1617" selection-start-line="1617" selection-end-line="1617" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/utils/data/_utils/fetch.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="263">
+          <caret line="16" selection-start-line="16" selection-end-line="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/pytorch_transformers/modeling_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="161">
+          <caret line="179" selection-start-line="179" selection-end-line="179" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/pathlib.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="169">
+          <caret line="694" selection-start-line="694" selection-end-line="694" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/urllib/parse.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="374" selection-start-line="374" selection-end-line="374" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/genericpath.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="21" selection-start-line="21" selection-end-line="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/pytorch_transformers/file_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="161">
+          <caret line="210" selection-start-line="210" selection-end-line="210" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/requests/api.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="140">
+          <caret line="58" selection-start-line="58" selection-end-line="58" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="190">
+          <caret line="184" selection-start-line="184" selection-end-line="184" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/_collections_abc.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="150">
+          <caret line="847" selection-start-line="847" selection-end-line="847" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/requests/structures.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="211">
+          <caret line="43" selection-start-line="43" selection-end-line="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/requests/utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="371">
+          <caret line="809" selection-start-line="809" selection-end-line="809" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/requests/hooks.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="17" selection-start-line="17" selection-end-line="17" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/requests/sessions.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="360">
+          <caret line="412" selection-start-line="412" selection-end-line="412" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/http/cookiejar.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="171">
+          <caret line="1219" selection-start-line="1219" selection-end-line="1219" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/requests/cookies.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="241">
+          <caret line="520" selection-start-line="520" selection-end-line="520" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/tensor.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="154">
+          <caret line="429" selection-start-line="429" selection-end-line="429" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/multiprocessing/synchronize.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="80">
+          <caret line="232" selection-start-line="232" selection-end-line="232" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/utils/data/dataloader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="80">
+          <caret line="897" selection-start-line="897" selection-end-line="897" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/preprocessing/pre_process_visdial.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="357">
+          <caret line="17" column="118" selection-start-line="17" selection-start-column="118" selection-end-line="17" selection-end-column="118" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+            <element signature="e#5181#6506#0" />
+            <element signature="e#6779#7684#0" />
+            <element signature="e#9342#9381#1" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/nn/parallel/data_parallel.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="131">
+          <caret line="149" selection-start-line="149" selection-end-line="149" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/optim_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="525">
+          <caret line="25" selection-start-line="25" selection-end-line="25" />
+          <folding>
+            <element signature="e#0#14#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/visdial_metrics.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="89">
+          <caret line="80" column="57" selection-start-line="80" selection-start-column="57" selection-end-line="80" selection-end-column="57" />
+          <folding>
+            <element signature="e#944#1692#0" />
+            <element signature="e#4764#7465#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/language_only_dialog_encoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="126">
+          <caret line="6" column="23" selection-start-line="6" selection-start-column="23" selection-end-line="6" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#250#1924#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/evaluate.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="492">
+          <caret line="137" column="12" selection-start-line="137" selection-start-column="12" selection-end-line="137" selection-end-column="12" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#2185#3350#1" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/language_only_dialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="735">
+          <caret line="148" column="16" selection-start-line="148" selection-start-column="16" selection-end-line="148" selection-end-column="16" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#354#3066#0" />
+            <element signature="e#1439#3066#0" />
+            <element signature="e#3107#6943#0" />
+            <element signature="e#3714#4004#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/pydevd.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="36288">
+          <caret line="1728" column="1" selection-start-line="1728" selection-start-column="1" selection-end-line="1728" selection-end-column="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/bert_base_6layer_6conect.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="550">
+          <caret line="30" lean-forward="true" selection-start-line="30" selection-end-line="30" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/image_features_reader.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret column="22" selection-start-column="22" selection-end-column="22" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../transformers/src/transformers/modeling_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="138">
+          <caret line="971" selection-start-line="971" selection-end-line="971" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$APPLICATION_HOME_DIR$/helpers/pydev/_pydev_imps/_pydev_execfile.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_language_only_baseline_2.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="3675">
+          <caret line="200" column="74" selection-start-line="200" selection-start-column="74" selection-end-line="200" selection-end-column="74" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../transformers/src/transformers/configuration_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="128">
+          <caret line="429" selection-start-line="429" selection-end-line="429" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/config/bert_base_baseline.json">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="147">
+          <caret line="7" column="5" lean-forward="true" selection-start-line="7" selection-start-column="5" selection-end-line="7" selection-end-column="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/visualize.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="182">
+          <caret line="40" selection-start-line="40" selection-end-line="40" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="298">
+          <caret line="27" column="26" selection-start-line="27" selection-start-column="26" selection-end-line="27" selection-end-column="26" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#998#6774#0" />
+            <element signature="e#6855#11151#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/options.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="282">
+          <caret line="14" selection-start-line="14" selection-end-line="14" />
+          <folding>
+            <element signature="e#0#9#0" expanded="true" />
+            <element signature="e#2152#2226#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/dataloader/dataloader_visdial.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1904">
+          <caret line="317" selection-start-line="317" selection-end-line="317" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#1336#3871#0" />
+            <element signature="e#6263#8664#0" />
+            <element signature="e#9152#11416#0" />
+            <element signature="e#24464#30472#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/utils/data_utils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="336">
+          <caret line="16" selection-start-line="16" selection-end-line="16" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#3181#4810#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/nn/modules/linear.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="208">
+          <caret line="86" selection-start-line="86" selection-end-line="86" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../anaconda3/envs/visdial-bert/lib/python3.6/site-packages/torch/nn/modules/module.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="146">
+          <caret line="540" selection-start-line="540" selection-end-line="540" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/train_language_only_baseline.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="221">
+          <caret line="145" selection-start-line="145" selection-end-line="145" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#6502#10869#0" />
+            <element signature="e#7621#9057#1" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/language_and_video_dialog.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="200">
+          <caret line="207" selection-start-line="207" selection-end-line="207" />
+          <folding>
+            <element signature="e#0#15#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/models/language_and_video_encoder.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="200">
+          <caret line="55" column="17" selection-start-line="55" selection-start-column="16" selection-end-line="55" selection-end-column="93" />
+          <folding>
+            <element signature="e#0#12#0" expanded="true" />
+            <element signature="e#396#798#0" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+  </component>
+</project>

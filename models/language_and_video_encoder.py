@@ -10,7 +10,7 @@ class DialogEncoder(nn.Module):
 
     def __init__(self):
         super(DialogEncoder, self).__init__()
-        config = BertConfig.from_json_file('/nethome/halamri3/visdial-bert/config/bert_base_baseline.json')
+        config = BertConfig.from_json_file('config/bert_base_baseline.json')
         self.bert_pretrained = BertForPretrainingDialog.from_pretrained('bert-base-uncased', output_hidden_states=True)
         self.bert_pretrained.train()
         # add additional layers for the inconsistency loss
@@ -32,46 +32,7 @@ class DialogEncoder(nn.Module):
                 mode=0
         ):
 
-
-
-        if mode == 0: #here we will only pass the language input and use the lanugage losses
-
-            outputs = self.bert_pretrained(
-                input_ids=input_ids,
-                sep_indices=sep_indices,
-                sep_len=sep_len,
-                token_type_ids=token_type_ids,
-                attention_mask=attention_mask,
-                labels=labels,
-                next_sentence_label=next_sentence_label,
-                head_mask=head_mask,
-                return_dict=return_dict
-            )
-            loss = None
-
-            if next_sentence_label is not None:
-                loss, lm_scores, nsp_scores, hidden_states = outputs
-            else: #evaluation!
-                lm_scores, nsp_scores, hidden_states = outputs
-
-            loss_fct = CrossEntropyLoss(ignore_index=-1)
-
-            lm_loss = None
-            nsp_loss = None
-
-            if next_sentence_label is not None:
-                nsp_loss = loss_fct(nsp_scores, next_sentence_label)
-            if labels is not None:
-                lm_loss = loss_fct(lm_scores.view(-1,lm_scores.shape[-1]), labels.view(-1))
-
-            out = (loss,lm_loss, nsp_loss)
-            if output_nsp_scores:
-                out  = out + (nsp_scores,)
-            if output_lm_scores:
-                out = out + (lm_scores,)
-            return out
-
-        elif mode == 1:
+        if mode == 0:
 
             transformer_outputs = self.bert_pretrained.bert(
                 inputs_embeds=inputs_embeds,
@@ -80,26 +41,23 @@ class DialogEncoder(nn.Module):
                 return_dict=return_dict
             )
 
-            lm_scores, nsp_scores = self.bert_pretrained.cls(sequence_output= transformer_outputs['last_hidden_state'],
-                                                             pooled_output=transformer_outputs ['pooler_output'])
+            hidden_states = transformer_outputs['last_hidden_state']
+            lm_scores, nsp_scores = self.bert_pretrained.cls(sequence_output=transformer_outputs['last_hidden_state'],
+                                                             pooled_output=transformer_outputs['pooler_output'])
+            
             lm_scores.detach()
             nsp_scores.detach()
+            loss = None
+            
+            if next_sentence_label is not None and labels is not None:
+                
+                loss_lm_fct = CrossEntropyLoss(ignore_index=-1)
+                nsp_loss = loss_lm_fct(nsp_scores, next_sentence_label)
+                lm_loss = loss_lm_fct(lm_scores.view(-1, lm_scores.size(2)), labels.view(-1))
+                outputs = (lm_loss, nsp_loss)
 
-            loss_fct = CrossEntropyLoss(ignore_index=-1)
-            loss =None
-
-            if next_sentence_label is not None:
-                nsp_loss = loss_fct(nsp_scores, next_sentence_label)
-            if labels is not None:
-                lm_loss = loss_fct(lm_scores.view(-1,lm_scores.size(2)), labels.view(-1))
-
-            out = (loss, lm_loss, nsp_loss)
-            if output_nsp_scores:
-                out = out + (nsp_scores,)
-            if output_lm_scores:
-                out = out + (lm_scores,)
-
-            return out
+                return outputs
+            return nsp_scores
 
         else:
 
@@ -109,19 +67,33 @@ class DialogEncoder(nn.Module):
                 attention_mask=attention_mask,
                 return_dict=return_dict
             )
-            hidden_states= transformer_outputs['last_hidden_state']
-            lm_logits = self.bert_pretrained.cls(hidden_states)
 
-            outputs = (lm_logits,) + transformer_outputs['pooler_output'] + transformer_outputs['hidden_states']
-
+            hidden_states = transformer_outputs['last_hidden_state']
+            lm_scores, nsp_scores = self.bert_pretrained.cls(sequence_output=transformer_outputs['last_hidden_state'],
+                                                             pooled_output=transformer_outputs['pooler_output'])
+            
+         
             lm_video_regs = self.bert_pretrained.video_inverse_ff(hidden_states[:, :labels[1].size(1), :])
-            shifted_video_regs = lm_video_regs[..., :-1, :].contiguous()
-            shifted_video_labels = labels[1][..., :-1, :].contiguous()
 
-            loss_video_fct = MSELoss(reduce=True, reduction='mean')
-            loss_video = loss_video_fct(shifted_video_regs, shifted_video_labels)
-            lm_video_regs = self.bert_pretrained.video_inverse_ff(hidden_states[:,:labels.size(1),:])
-            loss = loss_video
+            lm_scores.detach()
+            nsp_scores.detach()
+            lm_video_regs.detach()
+           
+            if next_sentence_label is not None and labels is not None:
+                
+                loss_lm_fct = CrossEntropyLoss(ignore_index=-1)
+                loss_video_fct = MSELoss(reduce=True, reduction='mean')
+                loss = None
+     
+                nsp_loss = loss_lm_fct(nsp_scores, next_sentence_label)
+                lm_loss = loss_lm_fct(lm_scores.view(-1, lm_scores.size(2)), labels[0].view(-1))
+                shifted_video_labels = labels[1][..., :-1, :].contiguous()
+                shifted_video_regs = lm_video_regs[..., :-1, :].contiguous()
+                shifted_video_labels = shifted_video_labels.expand(shifted_video_regs.size(0), -1, -1)
+                video_loss = loss_video_fct(shifted_video_regs, shifted_video_labels)
+            
+                outputs = (lm_loss, nsp_loss, video_loss)
 
-            outputs = (loss,) + outputs
-            return outputs
+                return outputs
+            
+            return nsp_scores

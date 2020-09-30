@@ -22,6 +22,8 @@ import pprint
 from time import gmtime, strftime
 from timeit import default_timer as timer
 import logging
+from tqdm import tqdm
+import numpy as np
 
 logging.basicConfig(
     format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -100,6 +102,7 @@ def forward(dialog_encoder, batch, params, output_nsp_scores=False, output_lm_sc
                     ,next_sentence_label=next_sentence_labels,output_nsp_scores=output_nsp_scores, output_lm_scores=output_lm_scores)
 
     if not evaluation:
+        
         lm_loss = lm_loss.mean()
         nsp_loss = nsp_loss.mean()
         loss = (params['lm_loss_coeff'] * lm_loss) + (params['nsp_loss_coeff'] * nsp_loss)
@@ -181,6 +184,7 @@ if __name__ == '__main__':
     if not os.path.exists(params['save_path']):
         os.mkdir(params['save_path'])
 
+
     viz = VisdomVisualize(
         enable=bool(params['enable_visdom']),
         env_name=params['visdom_env'],
@@ -188,7 +192,6 @@ if __name__ == '__main__':
         port=params['visdom_server_port'])
     pprint.pprint(params)
     viz.addText(pprint.pformat(params, indent=4))
-    #logger.info(params)
 
     dataset = VisdialDataset(params)
 
@@ -248,15 +251,17 @@ if __name__ == '__main__':
             start_iter_id = pretrained_dict['iterId']
             
     num_iter_per_epoch = dataset.numDataPoints['train'] // (params['batch_size'] // params['sequences_per_image'] if (params['batch_size'] // params['sequences_per_image']) \
-         else 1 if not params['overfit'] else 5 )
+         else 1 if not params['overfit'] else 5)
     print('\n%d iter per epoch.' % num_iter_per_epoch)
-    #logger.info('%d iter per epoch.' % num_iter_per_epoch)
     dialog_encoder = nn.DataParallel(dialog_encoder)
     dialog_encoder.to(device)
 
     start_t = timer()
+
     optimizer.zero_grad()
-    for epoch_id, idx, batch in batch_iter(dataloader, params):
+
+    for epoch_id, idx, batch in tqdm(batch_iter(dataloader, params)):
+
         iter_id = start_iter_id + idx + (epoch_id * num_iter_per_epoch)
         dialog_encoder.train()
         if not params['overfit']:
@@ -268,6 +273,7 @@ if __name__ == '__main__':
         lm_nsp_loss = None
         if lm_loss is not None and nsp_loss is not None:
             lm_nsp_loss = lm_loss + nsp_loss
+
         loss /= params['batch_multiply']
         loss.backward()        
         scheduler.step()
@@ -275,7 +281,8 @@ if __name__ == '__main__':
         if iter_id % params['batch_multiply'] == 0 and iter_id > 0:
             optimizer.step()
             optimizer.zero_grad()
-                        
+
+        # Update line plots and check the validation loss
         if iter_id % 100 == 0:
             end_t = timer()
             curEpoch = float(iter_id) / num_iter_per_epoch
@@ -284,6 +291,7 @@ if __name__ == '__main__':
             print_nsp_loss = 0
             print_inconsistency_loss = 0
             print_lm_nsp_loss = 0
+
             if lm_loss is not None:
                 print_lm_loss = lm_loss.item()
             if nsp_loss is not None:
@@ -291,51 +299,33 @@ if __name__ == '__main__':
             if lm_nsp_loss is not None:
                 print_lm_nsp_loss = lm_nsp_loss.item()
 
-            printFormat = '[%s][Ep: %.2f][Iter: %d][Time: %5.2fs][NSP + LM Loss: %.3g][LM Loss: %.3g][NSP Loss: %.3g]'
+            printFormat = '[TrainingLoss][%s][Ep: %.2f][Iter: %d][Time: %5.2fs][NSP + LM Loss: %.3g][LM Loss: %.3g][NSP Loss: %.3g]'
             printInfo = [
                 timeStamp, curEpoch, iter_id, end_t - start_t, print_lm_nsp_loss, print_lm_loss, print_nsp_loss
             ]
             print(printFormat % tuple(printInfo))
-            #logger.info('[%s][Ep: %.2f][Iter: %d][Time: %5.2f][NSP + LM Loss: %.3f][LM Loss: %.3f][NSP Loss: %.3f]'%(timeStamp, curEpoch, iter_id, end_t - start_t, print_lm_nsp_loss, print_lm_loss, print_nsp_loss))
 
             start_t = end_t
-            # Update line plots
-            viz.linePlot(iter_id, loss.item(), 'loss', 'tot loss')
-            #logger.info('Iter: [%d], Tot_loss: [%5f]' % (iter_id, loss.item()))
+            # Update line plots and check the validation loss
 
+            viz.linePlot(iter_id, loss.item(), 'loss', 'tot loss')
             if lm_nsp_loss is not None:
                 viz.linePlot(iter_id, lm_nsp_loss.item(), 'loss', 'lm + nsp loss')
-                #logger.info('Lm + nsp Loss: %4f' % (lm_nsp_loss.item()))
             if lm_loss is not None:
-                viz.linePlot(iter_id, lm_loss.item(),'loss', 'lm loss')
-                #logger.info('Lm + nsp Loss: %4f' % (lm_loss.item()))
+                viz.linePlot(iter_id, lm_loss.item(), 'loss', 'lm loss')
             if nsp_loss is not None:
                 viz.linePlot(iter_id, nsp_loss.item(), 'loss', 'nsp loss')
-                #logger.info('Lm + nsp Loss: %4f'% (nsp_loss.item()))
-                        
-        old_num_iter_per_epoch = num_iter_per_epoch
-        if params['overfit']:
-            num_iter_per_epoch = 100
-        if iter_id % num_iter_per_epoch == 0 and iter_id > 0:
-            torch.save({'model_state_dict' : dialog_encoder.module.state_dict(),'scheduler_state_dict':scheduler.state_dict() \
-                 ,'optimizer_state_dict': optimizer.state_dict(), 'iter_id':iter_id}, os.path.join(params['save_path'], 'visdial_dialog_encoder_%d.ckpt'%iter_id))
-
-        if iter_id % num_iter_per_epoch == 0:
-            viz.save()
-        # fire evaluation
-
-
-        print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
-        #logger.info("num iteration for eval".format(num_iter_per_epoch * (8 // params['sequences_per_image'])))
-
-        if  ((iter_id % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0):
-
-            eval_batch_size = 1
+              
+            # ------------------------- check the validation loss as well ----------------------------------------------:
+            # Each image will need 1000 forward passes, (100 at each round x 10 rounds).
+            '''
+            dataset.split = 'val'
+            dialog_encoder.eval()
             if params['overfit']:
                 eval_batch_size = 1
-            
-            dataset.split = 'val'
-            # each image will need 1000 forward passes, (100 at each round x 10 rounds).
+            else:
+                eval_batch_size = 100
+
             dataloader = DataLoader(
                 dataset,
                 batch_size=eval_batch_size,
@@ -344,27 +334,110 @@ if __name__ == '__main__':
                 drop_last=True,
                 pin_memory=False)
 
-            all_metrics = visdial_evaluate(dataloader, params, eval_batch_size)
+            timeStamp = strftime('%a %d %b %y %X', gmtime())
+
+            lm_loss_all = []
+            nsp_loss_all = []
+            lm_nsp_loss_all = []
+
+            with torch.no_grad():
+
+                for epoch_id, idx, batch in batch_iter(dataloader, params):
+
+                    iter_id = start_iter_id + idx + (epoch_id * num_iter_per_epoch)
+
+                    loss, lm_loss, nsp_loss = forward(dialog_encoder, batch, params, sample_size=sample_size, evaluation=True)
+
+                    print_lm_loss = 0
+                    print_nsp_loss = 0
+                    print_inconsistency_loss = 0
+                    print_lm_nsp_loss = 0
+                    if lm_loss is not None:
+                        print_lm_loss = lm_loss.item()
+                        lm_loss_all.append(lm_loss.item())
+                    if nsp_loss is not None:
+                        print_nsp_loss = nsp_loss.item()
+                        nsp_loss_all.append(nsp_loss.item())
+                    if lm_nsp_loss is not None:
+                        print_lm_nsp_loss = lm_nsp_loss.item()
+                        lm_nsp_loss_all.append(lm_nsp_loss.item())
+
+            lm_loss_all = np.mean(lm_loss_all)
+            nsp_loss_all = np.mean(nsp_loss_all)
+            lm_nsp_loss_all = np.mean(lm_nsp_loss_all)
+
+            end_t = timer()
+            printFormat = '[ValidationLoss][%s][Ep: %.2f][Iter: %d][Time: %5.2fs][NSP + LM Loss: %.3g][LM Loss: %.3g][NSP Loss: %.3g]'
+            printInfo = [
+            timeStamp, curEpoch, iter_id, end_t - start_t, lm_nsp_loss_all, lm_loss_all, nsp_loss_all ]
+            print(printFormat % tuple(printInfo))
+
+            viz.linePlot(iter_id, loss.item(), 'loss', 'tot loss',  ylabel='Validation')
+
+            if lm_nsp_loss is not None:
+                viz.linePlot(iter_id, lm_nsp_loss_all, 'loss', 'lm + nsp loss',  ylabel='Validation')
+            if lm_loss is not None:
+                viz.linePlot(iter_id, lm_loss_all, 'loss', 'lm loss',  ylabel='Validation')
+            if nsp_loss is not None:
+                viz.linePlot(iter_id, nsp_loss_all, 'loss', 'nsp loss',  ylabel='Validation')
+
+            start_t = end_t
+            # ----------------------------------------------------------------------------------------------------------#
+            '''
+        old_num_iter_per_epoch = num_iter_per_epoch
+
+        if params['overfit']:
+            num_iter_per_epoch = 1
+
+        if iter_id % num_iter_per_epoch == 0 and iter_id > 0:
+            torch.save({'model_state_dict' : dialog_encoder.module.state_dict(),'scheduler_state_dict':scheduler.state_dict() \
+                 ,'optimizer_state_dict': optimizer.state_dict(), 'iter_id':iter_id}, os.path.join(params['save_path'], 'visdial_dialog_encoder_%d.ckpt'%iter_id))
+
+        if iter_id % num_iter_per_epoch == 0:
+            viz.save()
+        # fire evaluation
+        #dataset.split = 'train'
+        #dialog_encoder.train()
+    '''
+        print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
+        #logger.info("num iteration for eval".format(num_iter_per_epoch * (8 // params['sequences_per_image'])))
+     
+    if  ((iter_id % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0):
+
+        eval_batch_size = 1
+        if params['overfit']:
+            eval_batch_size = 1
+
+        dataset.split = 'val'
+        # each image will need 1000 forward passes, (100 at each round x 10 rounds).
+        dataloader = DataLoader(
+            dataset,
+            batch_size=eval_batch_size,
+            shuffle=False,
+            num_workers=params['num_workers'],
+            drop_last=True,
+            pin_memory=False)
+
+        all_metrics = visdial_evaluate(dataloader, params, eval_batch_size)
 
 
-            print("\tr@1: {}".format(all_metrics['r@1']))
-            print("\tr@5: {}".format(all_metrics['r@5']))
-            print("\tr@10: {}".format(all_metrics['r@10']))
-            print("\tmeanR: {}".format(all_metrics['mean']))
-            print("\tmeanRR: {}".format(all_metrics['mrr']))
+        print("\tr@1: {}".format(all_metrics['r@1']))
+        print("\tr@5: {}".format(all_metrics['r@5']))
+        print("\tr@10: {}".format(all_metrics['r@10']))
+        print("\tmeanR: {}".format(all_metrics['mean']))
+        print("\tmeanRR: {}".format(all_metrics['mrr']))
 
-            for metric_name, metric_value in all_metrics.items():
-                #print(f"{metric_name}: {metric_value}")
-                #logger.info(f"{metric_name}: {metric_value}")
+        for metric_name, metric_value in all_metrics.items():
+            #print(f"{metric_name}: {metric_value}")
+            #logger.info(f"{metric_name}: {metric_value}")
 
-                if 'round' in metric_name:
-                    viz.linePlot(iter_id, metric_value, 'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1], metric_name)
-                    #logger.info('Retrieval Round Val Metrics Round -' % (metric_name.split('_')[-1], metric_name))
-                        
-                else:
-                    viz.linePlot(iter_id, metric_value, 'Retrieval Val Metrics', metric_name)
-                    #logger.info('%s - %s: %4.4f'%(metric_name, metric_value))
+            if 'round' in metric_name:
+                viz.linePlot(iter_id, metric_value, 'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1], metric_name)
+                #logger.info('Retrieval Round Val Metrics Round -' % (metric_name.split('_')[-1], metric_name))
 
-            dataset.split = 'train'
+            else:
+                viz.linePlot(iter_id, metric_value, 'Retrieval Val Metrics', metric_name)
+                #logger.info('%s - %s: %4.4f'%(metric_name, metric_value))
 
-        num_iter_per_epoch = old_num_iter_per_epoch        
+    '''
+    num_iter_per_epoch = old_num_iter_per_epoch

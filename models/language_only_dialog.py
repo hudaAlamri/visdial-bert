@@ -137,8 +137,16 @@ class BertForPretrainingDialog(BertForPreTraining):
         self._tie_or_clone_weights(self.cls.predictions.decoder,
                                    self.bert.embeddings.word_embeddings)
 
-    def forward(self, input_ids, sep_indices=None, sep_len=None, token_type_ids=None,attention_mask=None,
-        masked_lm_labels=None, next_sentence_label=None, position_ids=None, head_mask=None):
+    def forward(self,
+                input_ids=None,
+                sep_indices=None,
+                sep_len=None,
+                token_type_ids=None,
+                attention_mask=None,
+                masked_lm_labels=None,
+                next_sentence_label=None,
+                position_ids=None,
+                head_mask=None):
 
         outputs = self.bert(input_ids, sep_indices=sep_indices, sep_len=sep_len,token_type_ids=token_type_ids\
                     ,attention_mask=attention_mask)

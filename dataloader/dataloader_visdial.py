@@ -294,6 +294,7 @@ class VisdialDataset(data.Dataset):
             '''
             # get video features
             vid = img_id
+            
             if self.features is not None:
                 try:
                     vgg = np.load(self.features["vggish"][vid][0])
@@ -303,9 +304,9 @@ class VisdialDataset(data.Dataset):
                     vgg = np.load(self.features["vggish"][vid][1])
                     i3d_flow = np.load(self.features["i3d_flow"][vid][1])
                     i3d_rgb = np.load(self.features["i3d_rgb"][vid][1])
-
-                sample_i3d_flow = i3d_flow[range(1, i3d_flow.shape[0], 1)]
-                sample_i3d_rgb = i3d_rgb[range(1, i3d_rgb.shape[0], 1)]
+                
+                sample_i3d_flow = i3d_flow[range(1, min(i3d_flow.shape[0],256), 1)]
+                sample_i3d_rgb = i3d_rgb[range(1, min(i3d_rgb.shape[0], 256), 1)]
 
                 vgg = torch.from_numpy(vgg).float()
                 i3d_flow = torch.from_numpy(sample_i3d_flow).float()
@@ -522,6 +523,9 @@ class VisdialDataset(data.Dataset):
 
             return item
 
+
+
+
 def read_command_line(argv=None):
     parser = argparse.ArgumentParser(description='Large Scale Pretraining for Visual Dialog')
 
@@ -612,24 +616,4 @@ def read_command_line(argv=None):
 
     return parsed
 
-'''
-if __name__ == "__main__":
 
-    params= read_command_line()
-
-    dataset = VisdialDataset(params)
-
-    dataloader = DataLoader(
-        dataset,
-        batch_size=params['batch_size'] // params['sequences_per_image'] if (
-                    params['batch_size'] // params['sequences_per_image']) \
-            else 1 if not params['overfit'] else 5,
-        shuffle=True,
-        num_workers=params['num_workers'],
-        drop_last=True,
-        pin_memory=False)
-
-    for i, batch in dataloader:
-        print(i)
-        print(batch)
-'''

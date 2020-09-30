@@ -7,6 +7,7 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
 from dataloader.dataloader_visdial import VisdialDataset
 import options
+from models.language_only_dialog_encoder import DialogEncoder
 from models.visual_dialog_encoder import VisualDialogEncoder
 import torch.optim as optim
 from utils.visualize import VisdomVisualize
@@ -21,18 +22,22 @@ from utils.data_utils import sequence_mask, batch_iter
 from utils.optim_utils import WarmupLinearScheduleNonZero
 import json
 import logging
-from train import forward
+from train_language_only_baseline import forward
 
 def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
+
     ranks_json = []
     dialog_encoder.eval()
     batch_idx = 0
     with torch.no_grad():
-        batch_size = 500 * (params['n_gpus']/8)
-        batch_size = min([1, 2, 4, 5, 100, 1000, 200, 8, 10, 40, 50, 500, 20, 25, 250, 125], \
-             key=lambda x: abs(x-batch_size) if x <= batch_size else float("inf"))
+
+        batch_size = 1
+        #batch_size = 500 * (params['n_gpus']/8)
+        #batch_size = min([1, 2, 4, 5, 100, 1000, 200, 8, 10, 40, 50, 500, 20, 25, 250, 125], \
+        #     key=lambda x: abs(x-batch_size) if x <= batch_size else float("inf"))
         print("batch size for evaluation", batch_size)
         for epochId, _, batch in batch_iter(dataloader, params):
+
             if epochId == 1:
                 break
 
@@ -50,6 +55,7 @@ def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
             hist_len = hist_len.view(-1)
             
             # get image features
+            '''
             features = batch['image_feat'] 
             spatials = batch['image_loc'] 
             image_mask = batch['image_mask']
@@ -63,10 +69,11 @@ def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
             features = features.view(-1, max_num_regions, 2048)
             spatials = spatials.view(-1, max_num_regions, 5)
             image_mask = image_mask.view(-1, max_num_regions)
-
+            
             assert tokens.shape[0] == segments.shape[0] == sep_indices.shape[0] == mask.shape[0] == \
                 hist_len.shape[0] == features.shape[0] == spatials.shape[0] == \
                     image_mask.shape[0] == num_rounds * num_options * eval_batch_size
+            '''
 
             output = []
             assert (eval_batch_size * num_rounds * num_options)//batch_size == (eval_batch_size * num_rounds * num_options)/batch_size
@@ -78,12 +85,12 @@ def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
                 item['sep_indices'] = sep_indices[j*batch_size:(j+1)*batch_size,:]
                 item['mask'] = mask[j*batch_size:(j+1)*batch_size,:]
                 item['hist_len'] = hist_len[j*batch_size:(j+1)*batch_size]
-
+                '''
                 item['image_feat'] = features[j*batch_size:(j+1)*batch_size, : , :]
                 item['image_loc'] = spatials[j*batch_size:(j+1)*batch_size, : , :]
                 item['image_mask'] = image_mask[j*batch_size:(j+1)*batch_size, :]
-
-                _, _, _, _, nsp_scores = forward(dialog_encoder, item, params, output_nsp_scores=True, evaluation=True)
+                '''
+                _, _, _, nsp_scores = forward(dialog_encoder, item, params, output_nsp_scores=True, evaluation=True)
                 # normalize nsp scores
                 nsp_probs = F.softmax(nsp_scores, dim=1)
                 assert nsp_probs.shape[-1] == 2
@@ -107,12 +114,13 @@ def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
 
             batch_idx += 1
     return ranks_json
+
 if __name__ == '__main__':
 
     params = options.read_command_line()
     pprint.pprint(params)
     dataset = VisdialDataset(params)
-    eval_batch_size = 5
+    eval_batch_size = 1
     split = 'test'
     dataset.split = split
     dataloader = DataLoader(
@@ -125,7 +133,9 @@ if __name__ == '__main__':
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     params['device'] = device
-    dialog_encoder = VisualDialogEncoder(params['model_config'])
+
+    #dialog_encoder = VisualDialogEncoder(params['model_config'])
+    dialog_encoder = DialogEncoder()
 
     if params['start_path']:
         pretrained_dict = torch.load(params['start_path'])
@@ -142,6 +152,7 @@ if __name__ == '__main__':
 
     dialog_encoder = nn.DataParallel(dialog_encoder)
     dialog_encoder.to(device)
+
     ranks_json = eval_ai_generate(dataloader, params, eval_batch_size, split=split)
 
     json.dump(ranks_json, open(params['save_name'] + '_predictions.txt', "w"))
