@@ -7,7 +7,7 @@ from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
 import torch.optim as optim
 
-from dataloader.dataloader_visdial import VisdialDataset
+from dataloader.dataloader_visdial import VisdialDataset, collate_fn
 import options
 # from models.language_only_dialog_encoder import DialogEncoder
 from models.language_and_video_encoder import DialogEncoder
@@ -37,11 +37,13 @@ def padding(seq, pad_token=0):
 
 def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=False, sample_size=None, evaluation=False):
 
+    batch_size, num_rounds, num_sampels, embed_size = batch['tokens'].shape
     input_ids = batch['tokens']
     token_type_ids = batch['segments']
     sep_indices = batch['sep_indices']
     labels = batch['mask']
     hist_len = batch['hist_len']
+    index = batch['index'].unsqueeze(dim=1).unsqueeze(dim=2).expand(-1,10,2).reshape(batch_size*num_rounds*num_sampels,-1)
     
     input_ids = input_ids.view(-1, input_ids.shape[-1])
     token_type_ids = token_type_ids.view(-1, token_type_ids.shape[-1])
@@ -60,6 +62,7 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
     sep_indices = sep_indices[sample_indices, :]
     labels = labels[sample_indices, :]
     hist_len = hist_len[sample_indices]
+    index = index[sample_indices]
     
     next_sentence_label = None
     
@@ -95,8 +98,6 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
                         attention_mask=attention_mask,
                         next_sentence_label=next_sentence_label,
                         output_nsp_scores=output_nsp_scores, output_lm_scores=output_lm_scores, mode=0)
-        
-        
 
         if not evaluation:
             lm_loss, nsp_loss = outputs
@@ -113,26 +114,24 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
     else:
         
         if batch['image_feat'] is not None:
-            i3d = batch['image_feat']
-            i3d = padding(i3d)
+            i3d = batch['image_feat'].unsqueeze(dim=1).unsqueeze(dim=2).expand(-1, 10, 2, -1, -1)
+            i3d = i3d.reshape(batch_size*num_rounds*num_sampels, embed_size, -1)
+            i3d = i3d[sample_indices, :, :]
             i3d_mask = torch.sum(i3d != 1, dim=2) != 0
-            i3d_mask = i3d_mask.expand(attention_mask.size(0),-1)
             input_mask = torch.cat([i3d_mask.to(params['device']), attention_mask], dim=1)
             i3d_labels = torch.ones((i3d.size(0), i3d.size(1))).long() * -1
-            #video_mask = torch.cat([torch.zeros((i3d.size(0), i3d.size(1))), torch.ones(labels.size())], 1)
+            video_mask = torch.cat([torch.zeros((i3d.size(0), i3d.size(1))), torch.ones(labels.size())], 1)
             # I think the video mask should be flipped for bert..not the same as GPT2
-            #reply_mask = torch.zeros(video_mask.size())
+            reply_mask = torch.zeros(video_mask.size())
             lm_labels = torch.cat([i3d_labels.expand(labels.size(0),-1).to(params['device']), labels], dim=1)
         
         input_embds = model.module.bert_pretrained.bert.embeddings(input_ids=input_ids, sep_indices=sep_indices, sep_len=sep_len)
         video_embds = model.module.bert_pretrained.video_ff(i3d.to(params['device']))
-        video_embds = video_embds.expand(sample_size, -1, -1)
         input_embeds = torch.cat([video_embds, input_embds], dim=1)
-
+        
         token_types = torch.ones((i3d.size(0), i3d.size(1))).long().cuda() * 2
-        token_types = token_types.expand(sample_size, -1)
         token_type_ids = torch.cat([token_types, token_type_ids], dim=1)
-        # token_type_ids = torch.cat([torch.ones((i3d.size(0), i3d.size(1))).long().cuda() * 1, token_type_ids], dim=1)
+        
         labels = (lm_labels, i3d)
         # attention_mask = (video_mask, input_mask)
         attention_mask = input_mask
@@ -160,7 +159,8 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
         return outputs
 
 
-def visdial_evaluate(dataloader, params, eval_batch_size):
+def visdial_evaluate(dataloader, model, params, eval_batch_size):
+    
     sparse_metrics = SparseGTMetrics()
     model.eval()
     batch_idx = 0
@@ -187,25 +187,6 @@ def visdial_evaluate(dataloader, params, eval_batch_size):
             mask = mask.view(-1, mask.shape[-1])
             hist_len = batch['hist_len']
             hist_len = hist_len.view(-1)
-            '''
-            if params['mode'] != 0:
-                    i3d = batch['image_feat'].to(params['device'])
-                    i3d_mask = torch.sum(i3d != 1, dim=2) != 0
-                    input_mask = torch.cat([i3d_mask.to(params['device']), attention_mask], dim=1)
-                    i3d_labels = torch.ones((i3d.size(0), i3d.size(1))).long() * -1
-                    video_mask = torch.cat([torch.zeros((i3d.size(0), i3d.size(1))), torch.ones(labels.size())], 1)
-
-                    # I think the video mask should be flipped for bert..not the same as GPT2
-                    reply_mask = torch.zeros(video_mask.size())
-                    lm_labels = torch.cat([i3d_labels.to(params['device']), labels], dim=1)
-                    
-                    input_embs = model.module.bert_pretrained.bert.embeddings(input_ids)
-                    # input_embs = model.module.bert_pretrained.bert.embeddings(input_ids=input_ids, sep_indices=sep_indices, sep_len=sep_len,  token_type_ids=token_type_ids)
-                    video_embs = model.module.bert_pretrained.video_ff(i3d)
-                    input_embeds = torch.cat([video_embs, input_embs], dim=1)
-                    token_type_ids = torch.cat([torch.ones((i3d.size(0), i3d.size(1))).long().cuda() * 2, token_type_ids], dim=1)
-                    lm_logits = model(inputs_embeds=input_embeds, token_type_ids=token_type_ids, attention_mask=input_mask, mode=1)
-            '''
             gt_option_inds = batch['gt_option_inds']
             gt_relevance = batch['gt_relevance']
             gt_relevance_round_id = batch['round_id'].squeeze(1)
@@ -224,6 +205,7 @@ def visdial_evaluate(dataloader, params, eval_batch_size):
                 item['mask'] = mask[j * batch_size:(j + 1) * batch_size, :]
                 item['hist_len'] = hist_len[j * batch_size:(j + 1) * batch_size]
                 _, _, _, nsp_scores = forward(model, item, params, output_nsp_scores=True, evaluation=True)
+               
                 # normalize nsp scores
                 nsp_probs = F.softmax(nsp_scores, dim=1)
                 output.append(nsp_probs[:, 0])
@@ -246,13 +228,11 @@ if __name__ == '__main__':
     os.makedirs('checkpoints', exist_ok=True)
     if not os.path.exists(params['save_path']):
         os.mkdir(params['save_path'])
-
     viz = VisdomVisualize(
         enable=bool(params['enable_visdom']),
         env_name=params['visdom_env'],
         server=params['visdom_server'],
         port=params['visdom_server_port'])
-
     pprint.pprint(params)
     viz.addText(pprint.pformat(params, indent=4))
 
@@ -262,11 +242,12 @@ if __name__ == '__main__':
     dataloader = DataLoader(
         dataset,
         batch_size=params['batch_size'] // params['sequences_per_image'] if (
-            params['batch_size'] // params['sequences_per_image']) \
-        else 1 if not params['overfit'] else 1,
+                   params['batch_size'] // params['sequences_per_image']) \
+            else 1 if not params['overfit'] else 5,
         shuffle=True,
         num_workers=params['num_workers'],
         drop_last=True,
+        #collate_fn=lambda x: collate_fn(x, features=True),
         pin_memory=False)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -321,29 +302,31 @@ if __name__ == '__main__':
     num_iter_per_epoch = dataset.numDataPoints['train'] // (
         params['batch_size'] // params['sequences_per_image'] if (params['batch_size'] // params['sequences_per_image']) \
         else 1 if not params['overfit'] else 5)
-
+    
+    print('\n%d iter per epoch.' % num_iter_per_epoch)
+    
     model = nn.DataParallel(model)
     model.to(device)
 
     start_t = timer()
     optimizer.zero_grad()
-
     for epoch_id, idx, batch in batch_iter(dataloader, params):
         
         iter_id = start_iter_id + idx + (epoch_id * num_iter_per_epoch)
-      
         model.train()
-        
-    
         loss = None
         lm_loss = None
         nsp_loss = None
         lm_nsp_loss = None # mode:0
         lm_nsp_vid_loss = None    # mode:1 lanugae losses nsp lm + video loss reg_loss
         vid_loss = None # mode:2 only regression loss
-
-        output = forward(model, batch, params, sample_size=params['batch_size'] if not params['overfit'] else sample_size)
         
+        if not params['overfit']:
+            output = forward(model, batch, params, sample_size=params['batch_size'])
+        else:
+            sample_size = 6
+            output = forward(model, batch, params, sample_size=sample_size)
+            
         if params['mode'] == 0:
                 lm_nsp_loss, lm_loss, nsp_loss = output
                 loss = lm_nsp_loss
@@ -358,20 +341,19 @@ if __name__ == '__main__':
         if iter_id % params['batch_multiply'] == 0 and iter_id > 0:
                 optimizer.step()
                 optimizer.zero_grad()
-
-        if iter_id % 10 == 0:
+            
+        scheduler.step()
         
+        if iter_id % 10 == 0:
                 end_t = timer()
                 curEpoch = float(iter_id) / num_iter_per_epoch
                 timeStamp = strftime('%a %d %b %y %X', gmtime())
-                
                 print_vid_loss = 0
                 print_lm_loss = 0
                 print_nsp_loss = 0
                 print_inconsistency_loss = 0
                 print_lm_nsp_loss = 0
                 print_total_loss = 0
-                
                 if lm_loss is not None:
                     print_lm_loss = lm_loss.item()
                 if nsp_loss is not None:
@@ -416,10 +398,8 @@ if __name__ == '__main__':
                     viz.linePlot(iter_id, vid_loss.item(), 'loss', 'vidReg loss')
                 
         old_num_iter_per_epoch = num_iter_per_epoch
-        
         if params['overfit']:
             num_iter_per_epoch = 100
-        
         if iter_id % num_iter_per_epoch == 0 and params['overfit'] is None:
                 torch.save(
                     {'model_state_dict': model.module.state_dict(), 'scheduler_state_dict': scheduler.state_dict() \
@@ -429,9 +409,8 @@ if __name__ == '__main__':
         if iter_id % num_iter_per_epoch == 0:
             viz.save()
        
-       # fire evaluation
-        '''
-        print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
+        # fire evaluation
+        #print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
         if  ((iter_id % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0) and iter_id > 0:
             eval_batch_size = 2
             if params['overfit']:
@@ -446,6 +425,7 @@ if __name__ == '__main__':
                 num_workers=params['num_workers'],
                 drop_last=True,
                 pin_memory=False)
+            
             all_metrics = visdial_evaluate(dataloader, model, params, eval_batch_size)
             for metric_name, metric_value in all_metrics.items():
                 print(f"{metric_name}: {metric_value}")
@@ -457,4 +437,4 @@ if __name__ == '__main__':
             dataset.split = 'train'
 
         num_iter_per_epoch = old_num_iter_per_epoch
-        '''
+        

@@ -17,7 +17,7 @@ from tqdm import tqdm
 def get_features_path(feature_path, train_data, val_data):
 
     all_features = {}
-    print("Reading video data....................")
+    print("\n.............Reading video data...........")
 
     vid_set = set()
 
@@ -281,7 +281,7 @@ class VisdialDataset(data.Dataset):
             item['mask'] = mask_all_rnd
             item['next_sentence_labels'] = next_labels_all_rnd
             item['hist_len'] = hist_len_all_rnd
-            
+            item['index'] = index
             # get image features
             '''
             features, num_boxes, boxes, _ , image_target = self._image_features_reader[img_id]
@@ -313,7 +313,7 @@ class VisdialDataset(data.Dataset):
                 i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
                 min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
                 i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
-                item['image_feat'] = i3d
+                item['image_feat'] = pad(i3d)
 
             return item
         
@@ -437,7 +437,7 @@ class VisdialDataset(data.Dataset):
                 i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
                 min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
                 i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
-                item['image_feat'] = i3d
+                item['image_feat'] = pad(i3d)
 
             return item
 
@@ -519,12 +519,48 @@ class VisdialDataset(data.Dataset):
                 i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
                 min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
                 i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
-                item['image_feat'] = i3d
+                item['image_feat'] = pad(i3d)
 
             return item
 
+def pad(i3d,padded_token=0):
+    max_leng = 256
+    results = torch.ones(max_leng, i3d.size(1)) * padded_token
+    results[:i3d.size(0), :] = i3d
+    return results
+    
+def collate_fn(batch, pad_token=0, features=None):
+    def padding(seq, pad_token=0):
+        max_len = max([i.size(0) for i in seq])
+        if len(seq[0].size()) == 1:
+            result = torch.ones((len(seq), max_len)).long() * pad_token
+        else:
+            result = torch.ones((len(seq), max_len, seq[0].size(-1))).float()
+        for i in range(len(seq)):
+            result[i, :seq[i].size(0)] = seq[i]
+        return result
 
-
+    i3d_list = []
+    i
+    if batch[0]['image_feat'] is not None:
+        for i in batch:
+            i3d_list.append(i['image_feat'])
+        i3d = padding(i3d_list)
+        for i in batch:
+            i
+        '''
+        i3d_mask = torch.sum(i3d != 1, dim=2) != 0
+        input_mask = torch.cat([i3d_mask, input_mask], dim=1)
+        i3d_labels = torch.ones((i3d.size(0), i3d.size(1))).long() * -1
+        video_mask = torch.cat([torch.zeros((i3d.size(0), i3d.size(1))), torch.ones(lm_labels.size())], 1)
+        reply_mask = torch.zeros(video_mask.size())
+        lm_labels = torch.cat([i3d_labels, lm_labels], dim=1)
+        '''
+        features = {}
+        features = {'image_feat': i3d}
+        batch.append(features)
+    
+    return batch
 
 def read_command_line(argv=None):
     parser = argparse.ArgumentParser(description='Large Scale Pretraining for Visual Dialog')
