@@ -274,27 +274,15 @@ class VisdialDataset(data.Dataset):
             hist_len_all_rnd = torch.cat(hist_len_all_rnd,0)
                    
             item = {}
-
             item['tokens'] = tokens_all_rnd
             item['segments'] = segments_all_rnd
             item['sep_indices'] = sep_indices_all_rnd
             item['mask'] = mask_all_rnd
             item['next_sentence_labels'] = next_labels_all_rnd
             item['hist_len'] = hist_len_all_rnd
-            item['index'] = index
-            # get image features
-            '''
-            features, num_boxes, boxes, _ , image_target = self._image_features_reader[img_id]
-            features, spatials, image_mask, image_target, image_label = encode_image_input(features, num_boxes, boxes, image_target, max_regions=self._max_region_num)
-            item['image_feat'] = features
-            item['image_loc'] = spatials
-            item['image_mask'] = image_mask
-            item['image_target'] = image_target
-            item['image_label'] = image_label
-            '''
+            
             # get video features
             vid = img_id
-            
             if self.features is not None:
                 try:
                     vgg = np.load(self.features["vggish"][vid][0])
@@ -313,7 +301,8 @@ class VisdialDataset(data.Dataset):
                 i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
                 min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
                 i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
-                item['image_feat'] = pad(i3d)
+                item['num_frames']= i3d.size(0)
+                item['image_feat'] = i3d
 
             return item
         
@@ -397,27 +386,13 @@ class VisdialDataset(data.Dataset):
             item['sep_indices'] = sep_indices_all
             item['mask'] = mask_all
             item['hist_len'] = hist_len_all
-                        
-            item['gt_option_inds'] = torch.LongTensor(gt_option_inds)            
+            item['gt_option_inds'] = torch.LongTensor(gt_option_inds)
 
             # return dense annotation data as well
             item['round_id'] = torch.LongTensor([self.visdial_data_val_dense[index]['round_id']])
             item['gt_relevance'] = gt_relevance
 
             # add image features. Expand them to create batch * num_rounds * num options * num bbox * img feats
-            '''
-            features, num_boxes, boxes, _ , image_target = self._image_features_reader[img_id]
-            features, spatials, image_mask, image_target, image_label = encode_image_input(features, num_boxes, boxes, \
-                                     image_target, max_regions=self._max_region_num, mask_prob=0)
-            item['image_feat'] = features
-            item['image_loc'] = spatials
-            item['image_mask'] = image_mask
-            item['image_target'] = image_target
-            item['image_label'] = image_label
-
-            item['image_id'] = torch.LongTensor([img_id])
-            '''
-
             vid = img_id
             if self.features is not None:
                 try:
@@ -437,7 +412,7 @@ class VisdialDataset(data.Dataset):
                 i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
                 min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
                 i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
-                item['image_feat'] = pad(i3d)
+                item['image_feat'] = i3d
 
             return item
 
@@ -484,22 +459,9 @@ class VisdialDataset(data.Dataset):
             item['sep_indices'] = sep_indices_all.unsqueeze(0)
             item['mask'] = mask_all.unsqueeze(0)
             item['hist_len'] = hist_len_all.unsqueeze(0)
-
             item['image_id'] = torch.LongTensor([img_id])
             item['round_id'] = torch.LongTensor([dialog['round_id']])
-
-            # add image features. Expand them to create batch * num_rounds * num options * num bbox * img feats
-            '''
-            features, num_boxes, boxes, _ , image_target = self._image_features_reader[img_id]
-            features, spatials, image_mask, image_target, image_label = encode_image_input(features, num_boxes, boxes, \
-                                     image_target, max_regions=self._max_region_num, mask_prob=0)
-            
-            item['image_feat'] = features
-            item['image_loc'] = spatials
-            item['image_mask'] = image_mask
-            item['image_target'] = image_target
-            item['image_label'] = image_label
-            '''
+ 
             vid = img_id
             if self.features is not None:
                 try:
@@ -519,7 +481,7 @@ class VisdialDataset(data.Dataset):
                 i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
                 min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
                 i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
-                item['image_feat'] = pad(i3d)
+                item['image_feat'] = i3d
 
             return item
 
@@ -530,37 +492,57 @@ def pad(i3d,padded_token=0):
     return results
     
 def collate_fn(batch, pad_token=0, features=None):
-    def padding(seq, pad_token=0):
-        max_len = max([i.size(0) for i in seq])
-        if len(seq[0].size()) == 1:
-            result = torch.ones((len(seq), max_len)).long() * pad_token
+    #dict_keys(['tokens', 'segments', 'sep_indices', 'mask', 'next_sentence_labels', 'hist_len', 'index', 'num_frames',
+     #          'image_feat'])
+    def padding(seq, seq_type='',pad_token=0):
+        
+        if seq_type == 'i3d':
+            max_len = max([i.size(0) for i in seq])
+            if len(seq[0].size()) == 1:
+                result = torch.ones((len(seq), max_len)).long() * pad_token
+            else:
+                result = torch.ones((len(seq), max_len, seq[0].size(-1))).float()
+            for i in range(len(seq)):
+                result[i, :seq[i].size(0)] = seq[i]
         else:
-            result = torch.ones((len(seq), max_len, seq[0].size(-1))).float()
-        for i in range(len(seq)):
-            result[i, :seq[i].size(0)] = seq[i]
+            
+            if type(seq[0]) == int:
+                result = torch.ones(len(seq))
+                for i in range(len(seq)):
+                    result[i] = seq[i]
+            else:
+                if len(seq[0].size()) == 3:
+                   result = torch.ones((len(seq), seq[0].size(0), seq[0].size(1), seq[0].size(-1))).long()
+                elif len(seq[0].size()) == 2:
+                    result = torch.ones((len(seq), seq[0].size(0), seq[0].size(-1))).long()
+                for i in range(len(seq)):
+                    result[i,:] = seq[i]
+
         return result
 
-    i3d_list = []
-    i
-    if batch[0]['image_feat'] is not None:
-        for i in batch:
-            i3d_list.append(i['image_feat'])
-        i3d = padding(i3d_list)
-        for i in batch:
-            i
-        '''
-        i3d_mask = torch.sum(i3d != 1, dim=2) != 0
-        input_mask = torch.cat([i3d_mask, input_mask], dim=1)
-        i3d_labels = torch.ones((i3d.size(0), i3d.size(1))).long() * -1
-        video_mask = torch.cat([torch.zeros((i3d.size(0), i3d.size(1))), torch.ones(lm_labels.size())], 1)
-        reply_mask = torch.zeros(video_mask.size())
-        lm_labels = torch.cat([i3d_labels, lm_labels], dim=1)
-        '''
-        features = {}
-        features = {'image_feat': i3d}
-        batch.append(features)
+    token_list, segment_list, sep_indices_list, mask_list, next_sentence_labels_list, hist_len_list, num_frames_list, image_feat_list = [], [], [],[],[],[],[],[]
+    features = {}
     
-    return batch
+    for i in batch:
+        token_list.append(i['tokens'])
+        segment_list.append(i['segments'])
+        sep_indices_list.append(i['sep_indices'])
+        mask_list.append(i['mask'])
+        next_sentence_labels_list.append(i['next_sentence_labels'])
+        hist_len_list.append(i['hist_len'])
+        num_frames_list.append(i['num_frames'])
+        image_feat_list.append(i['image_feat'])
+
+    tokens = padding(token_list)
+    segments = padding(segment_list)
+    sep_indices = padding(sep_indices_list)
+    mask_list = padding(mask_list)
+    next_sentence_labels = padding(next_sentence_labels_list)
+    hist_len =  padding(hist_len_list)
+    num_frames = padding(num_frames_list)
+    i3d = padding(image_feat_list, seq_type='i3d')
+
+    return tokens, segments, sep_indices, mask_list, next_sentence_labels, hist_len, num_frames, i3d
 
 def read_command_line(argv=None):
     parser = argparse.ArgumentParser(description='Large Scale Pretraining for Visual Dialog')
@@ -587,7 +569,7 @@ def read_command_line(argv=None):
     # Logging settings
     parser.add_argument('-enable_visdom', type=int, default=1,
                             help='Flag for enabling visdom logging')
-    parser.add_argument('-visdom_env', type=str, default='visdial-bert-avsd',
+    parser.add_argument('-visdom_env', type=str, default='visdial-bert-avsd', \
                             help='Name of visdom environment for plotting')
     parser.add_argument('-visdom_server', type=str, default='http://asimo.cc.gatech.edu',
                             help='Address of visdom server instance')

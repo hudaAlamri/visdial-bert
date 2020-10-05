@@ -36,14 +36,11 @@ def padding(seq, pad_token=0):
     return result
 
 def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=False, sample_size=None, evaluation=False):
+    
+    input_ids, token_type_ids, sep_indices, labels, next_sentence_labels, hist_len, num_frames, i3d = batch
+    batch_size, num_rounds, num_sampels, embed_size = input_ids.shape
 
-    batch_size, num_rounds, num_sampels, embed_size = batch['tokens'].shape
-    input_ids = batch['tokens']
-    token_type_ids = batch['segments']
-    sep_indices = batch['sep_indices']
-    labels = batch['mask']
-    hist_len = batch['hist_len']
-    index = batch['index'].unsqueeze(dim=1).unsqueeze(dim=2).expand(-1,10,2).reshape(batch_size*num_rounds*num_sampels,-1)
+    num_frames = num_frames.unsqueeze(dim=1).unsqueeze(dim=2).expand(-1,10,2).reshape(batch_size*num_rounds*num_sampels,-1)
     
     input_ids = input_ids.view(-1, input_ids.shape[-1])
     token_type_ids = token_type_ids.view(-1, token_type_ids.shape[-1])
@@ -62,15 +59,15 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
     sep_indices = sep_indices[sample_indices, :]
     labels = labels[sample_indices, :]
     hist_len = hist_len[sample_indices]
-    index = index[sample_indices]
+    num_frames = num_frames[sample_indices]
     
-    next_sentence_label = None
     
     if not evaluation:
-        next_sentence_label = batch['next_sentence_labels']
-        next_sentence_label = next_sentence_label.view(-1)
+        next_sentence_label = next_sentence_labels.view(-1)
         next_sentence_label = next_sentence_label[sample_indices]
         next_sentence_label = next_sentence_label.to(params['device'])
+    else:
+        next_sentence_labels = None
     
     input_ids = input_ids.to(params['device'])
     token_type_ids = token_type_ids.to(params['device'])
@@ -89,6 +86,7 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
     lm_scores = None
     sep_len = hist_len + 1
     
+
     if params['mode'] == 0:
         outputs = model(input_ids=input_ids,
                         sep_indices=sep_indices,
@@ -113,9 +111,9 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
     # -------------------- Adding video features ----------------------------
     else:
         
-        if batch['image_feat'] is not None:
-            i3d = batch['image_feat'].unsqueeze(dim=1).unsqueeze(dim=2).expand(-1, 10, 2, -1, -1)
-            i3d = i3d.reshape(batch_size*num_rounds*num_sampels, embed_size, -1)
+        if i3d is not None:
+            i3d = i3d.unsqueeze(dim=1).unsqueeze(dim=2).expand(-1, 10, 2, -1, -1)
+            i3d = i3d.reshape(batch_size*num_rounds*num_sampels, i3d.size(3), -1)
             i3d = i3d[sample_indices, :, :]
             i3d_mask = torch.sum(i3d != 1, dim=2) != 0
             input_mask = torch.cat([i3d_mask.to(params['device']), attention_mask], dim=1)
@@ -123,40 +121,44 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
             video_mask = torch.cat([torch.zeros((i3d.size(0), i3d.size(1))), torch.ones(labels.size())], 1)
             # I think the video mask should be flipped for bert..not the same as GPT2
             reply_mask = torch.zeros(video_mask.size())
-            lm_labels = torch.cat([i3d_labels.expand(labels.size(0),-1).to(params['device']), labels], dim=1)
+            lm_labels = torch.cat([i3d_labels.to(params['device']), labels], dim=1)
         
         input_embds = model.module.bert_pretrained.bert.embeddings(input_ids=input_ids, sep_indices=sep_indices, sep_len=sep_len)
         video_embds = model.module.bert_pretrained.video_ff(i3d.to(params['device']))
-        input_embeds = torch.cat([video_embds, input_embds], dim=1)
+        input_embds = torch.cat([video_embds, input_embds], dim=1)
         
         token_types = torch.ones((i3d.size(0), i3d.size(1))).long().cuda() * 2
         token_type_ids = torch.cat([token_types, token_type_ids], dim=1)
-        
         labels = (lm_labels, i3d)
-        # attention_mask = (video_mask, input_mask)
-        attention_mask = input_mask
-        
-        outputs =  model(inputs_embeds=input_embeds,
-                        token_type_ids=token_type_ids,
-                        labels=labels,
-                        next_sentence_label=next_sentence_label,
-                        attention_mask=input_mask,
-                        return_dict=True,
-                        mode=1)
-        
-        if not evaluation:
-            
-            lm_loss, nsp_loss, vid_loss = outputs
-            lm_loss = lm_loss.mean()
-            nsp_loss = nsp_loss.mean()
-            vid_loss = vid_loss.mean()
-            loss = (params['lm_loss_coeff'] * lm_loss) + (params['nsp_loss_coeff'] * nsp_loss) + (params['vid_loss_coeff'] * vid_loss
-                                                                                                   )
-            vid_lm_nsp_loss = loss
     
-            return vid_lm_nsp_loss, lm_loss, nsp_loss, vid_loss
-        
-        return outputs
+        if not evaluation:
+             mlm_loss, nsp_loss =model(inputs_embeds=input_embds,
+                            token_type_ids=token_type_ids,
+                            labels=labels,
+                            next_sentence_label=next_sentence_label,
+                            attention_mask=[reply_mask, input_mask],
+                            return_dict=True,
+                            mode=1)
+             vid_loss = model(inputs_embeds=input_embds,
+                            token_type_ids=token_type_ids,
+                            labels=labels,
+                            next_sentence_label=next_sentence_label,
+                            attention_mask=[video_mask, input_mask],
+                            return_dict=True,
+                            num_frames=num_frames,
+                            mode=2)
+            
+             mlm_loss = mlm_loss.mean()
+             nsp_loss = nsp_loss.mean()
+             vid_loss = vid_loss.mean()
+             loss = (params['lm_loss_coeff'] * mlm_loss) + (params['nsp_loss_coeff'] * nsp_loss) + (params['vid_loss_coeff'] * vid_loss)
+             return loss, mlm_loss, nsp_loss, vid_loss
+        else:
+            model_outputs = model(input_embds=input_embds,
+                                  token_type_ids=token_type_ids,
+                                  attention_mask=[reply_mask, input_mask],
+                                  mode=1)
+            return model_outputs
 
 
 def visdial_evaluate(dataloader, model, params, eval_batch_size):
@@ -247,7 +249,7 @@ if __name__ == '__main__':
         shuffle=True,
         num_workers=params['num_workers'],
         drop_last=True,
-        #collate_fn=lambda x: collate_fn(x, features=True),
+        collate_fn=lambda x: collate_fn(x, features=True),
         pin_memory=False)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -423,6 +425,7 @@ if __name__ == '__main__':
                 batch_size=eval_batch_size,
                 shuffle=False,
                 num_workers=params['num_workers'],
+                collate_fn=lambda x: collate_fn(x, features=True),
                 drop_last=True,
                 pin_memory=False)
             
