@@ -156,18 +156,22 @@ class BertModelDialog(BertModel):
         # used in OpenAI GPT, we just need to prepare the broadcast dimension here.
         #extended_attention_mask = attention_mask.unsqueeze(1).unsqueeze(2)
         extended_attention_mask = attention_mask
-        extended_attention_mask[0] = extended_attention_mask[0].unsqueeze(1).unsqueeze(2)
-        extended_attention_mask[1] = extended_attention_mask[1].unsqueeze(1).unsqueeze(2)
-        # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
-        # masked positions, this operation will create a tensor which is 0.0 for
-        # positions we want to attend and -10000.0 for masked positions.
-        # Since we are adding it to the raw scores before the softmax, this is
-        # effectively the same as removing these entirely.
-        extended_attention_mask[0] = extended_attention_mask[0].to(dtype=next(self.parameters()).dtype) # fp16 compatibility
-        #extended_attention_mask[1] = (1.0 - extended_attention_mask[1]) * -10000.0
+        if type(attention_mask) == torch.Tensor:
+                if  len(extended_attention_mask.size()) == 2:
+                    extended_attention_mask = extended_attention_mask.unsqueeze(1).unsqueeze(2)
+        else:  
+                extended_attention_mask[0] = extended_attention_mask[0].unsqueeze(1).unsqueeze(2)
+                extended_attention_mask[1] = extended_attention_mask[1].unsqueeze(1).unsqueeze(2)
+                # Since attention_mask is 1.0 for positions we want to attend and 0.0 for
+                # masked positions, this operation will create a tensor which is 0.0 for
+                # positions we want to attend and -10000.0 for masked positions.
+                # Since we are adding it to the raw scores before the softmax, this is
+                # effectively the same as removing these entirely.
+                extended_attention_mask[0] = extended_attention_mask[0].to(dtype=next(self.parameters()).dtype) # fp16 compatibility
+                #extended_attention_mask[1] = (1.0 - extended_attention_mask[1]) * -10000.0
 
-        extended_attention_mask[0] = extended_attention_mask[0].to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
-        #extended_attention_mask[1] = (1.0 - extended_attention_mask[1]) * -10000.0
+                extended_attention_mask[0] = extended_attention_mask[0].to(dtype=next(self.parameters()).dtype)  # fp16 compatibility
+                #extended_attention_mask[1] = (1.0 - extended_attention_mask[1]) * -10000.0
 
         # Prepare head mask if needed
         # 1.0 in head_mask indicate we keep the head

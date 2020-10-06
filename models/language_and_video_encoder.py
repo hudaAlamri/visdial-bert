@@ -32,20 +32,34 @@ class DialogEncoder(nn.Module):
                 num_frames=0,
                 mode=0
         ):
-    
-        transformer_outputs = self.bert_pretrained.bert(
-            inputs_embeds=inputs_embeds,
-            token_type_ids=token_type_ids,
-            attention_mask=attention_mask,
-            return_dict=return_dict
-        )
+        
+        if mode == 0:
+         
+                transformer_outputs = self.bert_pretrained.bert(
+                    input_ids=input_ids,
+                    sep_indices=sep_indices,
+                    sep_len=sep_len,
+                    token_type_ids=token_type_ids,
+                    attention_mask=attention_mask,
+                    return_dict=return_dict
+                )
+        else:
+
+                transformer_outputs = self.bert_pretrained.bert(
+                    inputs_embeds=inputs_embeds,
+                    token_type_ids=token_type_ids,
+                    attention_mask=attention_mask,
+                    return_dict=return_dict
+                )
 
         hidden_states = transformer_outputs['last_hidden_state']
         lm_scores, nsp_scores = self.bert_pretrained.cls(sequence_output=transformer_outputs['last_hidden_state'],
                                                          pooled_output=transformer_outputs['pooler_output'])
         
         outputs = (lm_scores, nsp_scores) + transformer_outputs['hidden_states']
-        if mode == 1:
+
+
+        if mode == 1 or mode ==0:
           
             lm_scores.detach()
             nsp_scores.detach()
@@ -76,11 +90,16 @@ class DialogEncoder(nn.Module):
                 
                 loss_video_fct = MSELoss(reduce=True, reduction='mean')
                 loss = None
+                '''
                 shifted_video_labels = labels[1][..., :-1, :].contiguous()
                 shifted_video_regs = lm_video_regs[..., :-1, :].contiguous()
                 shifted_video_labels = shifted_video_labels.expand(shifted_video_regs.size(0), -1, -1)
                 video_loss = loss_video_fct(shifted_video_regs, shifted_video_labels)
+                '''
+                video_loss = loss_video_fct(lm_video_regs, labels[1])
             
+ 
+                
                 outputs = video_loss
 
             return outputs

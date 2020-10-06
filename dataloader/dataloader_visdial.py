@@ -522,7 +522,8 @@ def collate_fn(batch, pad_token=0, features=None):
 
     token_list, segment_list, sep_indices_list, mask_list, next_sentence_labels_list, hist_len_list, num_frames_list, image_feat_list = [], [], [],[],[],[],[],[]
     features = {}
-    
+    import pdb
+    pdb.set_trace()
     for i in batch:
         token_list.append(i['tokens'])
         segment_list.append(i['segments'])

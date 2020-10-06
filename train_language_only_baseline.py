@@ -95,8 +95,8 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
                         labels=labels,
                         attention_mask=attention_mask,
                         next_sentence_label=next_sentence_label,
+                        return_dict=True,
                         output_nsp_scores=output_nsp_scores, output_lm_scores=output_lm_scores, mode=0)
-
         if not evaluation:
             lm_loss, nsp_loss = outputs
             lm_loss = lm_loss.mean()
@@ -346,7 +346,7 @@ if __name__ == '__main__':
             
         scheduler.step()
         
-        if iter_id % 10 == 0:
+        if iter_id % 100 == 0:
                 end_t = timer()
                 curEpoch = float(iter_id) / num_iter_per_epoch
                 timeStamp = strftime('%a %d %b %y %X', gmtime())
