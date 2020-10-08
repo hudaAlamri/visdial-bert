@@ -508,7 +508,6 @@ def collate_fn(batch, pad_token=0, features=None, eval=False):
                 result[i, :seq[i].size(0)] = seq[i]
         
         else:
-            
             if type(seq[0]) == int:
                 result = torch.ones(len(seq))
                 for i in range(len(seq)):
@@ -554,13 +553,18 @@ def collate_fn(batch, pad_token=0, features=None, eval=False):
     hist_len =  padding(hist_len_list)
     num_frames = padding(num_frames_list)
     i3d = padding(image_feat_list, seq_type='i3d')
-    gt_option_inds = padding(gt_option_inds)
-    round_ids = padding(round_ids)
+
+    if eval:
+        gt_option_inds = padding(gt_option_inds)
+        round_ids = padding(round_ids)
+
+        return tokens, segments, sep_indices, mask_list, hist_len, gt_option_inds, round_ids, num_frames, i3d
+    
     if not eval:
         next_sentence_labels = padding(next_sentence_labels_list)
         return tokens, segments, sep_indices, mask_list, next_sentence_labels, hist_len, num_frames, i3d
 
-    return tokens, segments, sep_indices, mask_list, hist_len, gt_option_inds, round_ids, num_frames, i3d
+
 
 def read_command_line(argv=None):
     parser = argparse.ArgumentParser(description='Large Scale Pretraining for Visual Dialog')
