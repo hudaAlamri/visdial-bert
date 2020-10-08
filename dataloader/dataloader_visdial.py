@@ -412,6 +412,7 @@ class VisdialDataset(data.Dataset):
                 i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
                 min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
                 i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
+                item['num_frames'] = i3d.size(0)
                 item['image_feat'] = i3d
 
             return item
@@ -481,6 +482,7 @@ class VisdialDataset(data.Dataset):
                 i3d_rgb = torch.from_numpy(sample_i3d_rgb).float()
                 min_length = min([i3d_flow.size(0), i3d_rgb.size(0), vgg.size(0)])
                 i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
+                item['num_frames'] = i3d.size(0)
                 item['image_feat'] = i3d
 
             return item
@@ -491,7 +493,7 @@ def pad(i3d,padded_token=0):
     results[:i3d.size(0), :] = i3d
     return results
     
-def collate_fn(batch, pad_token=0, features=None):
+def collate_fn(batch, pad_token=0, features=None, eval=False):
     #dict_keys(['tokens', 'segments', 'sep_indices', 'mask', 'next_sentence_labels', 'hist_len', 'index', 'num_frames',
      #          'image_feat'])
     def padding(seq, seq_type='',pad_token=0):
@@ -504,6 +506,7 @@ def collate_fn(batch, pad_token=0, features=None):
                 result = torch.ones((len(seq), max_len, seq[0].size(-1))).float()
             for i in range(len(seq)):
                 result[i, :seq[i].size(0)] = seq[i]
+        
         else:
             
             if type(seq[0]) == int:
@@ -515,35 +518,49 @@ def collate_fn(batch, pad_token=0, features=None):
                    result = torch.ones((len(seq), seq[0].size(0), seq[0].size(1), seq[0].size(-1))).long()
                 elif len(seq[0].size()) == 2:
                     result = torch.ones((len(seq), seq[0].size(0), seq[0].size(-1))).long()
+                else:
+                    if seq[0].size(0) > 1:
+                        result = torch.ones(len(seq),seq[0].size(0))
+                    else:
+                        result = torch.ones((len(seq))).long()
+                        
                 for i in range(len(seq)):
-                    result[i,:] = seq[i]
+                    result[i] = seq[i]
 
         return result
 
     token_list, segment_list, sep_indices_list, mask_list, next_sentence_labels_list, hist_len_list, num_frames_list, image_feat_list = [], [], [],[],[],[],[],[]
     features = {}
-    import pdb
-    pdb.set_trace()
+  
+    gt_option_inds, round_ids = [], []
     for i in batch:
         token_list.append(i['tokens'])
         segment_list.append(i['segments'])
         sep_indices_list.append(i['sep_indices'])
         mask_list.append(i['mask'])
-        next_sentence_labels_list.append(i['next_sentence_labels'])
         hist_len_list.append(i['hist_len'])
         num_frames_list.append(i['num_frames'])
         image_feat_list.append(i['image_feat'])
-
+        if eval:
+            gt_option_inds.append(i['gt_option_inds'])
+            round_ids.append(i['round_id'])
+        else:
+            next_sentence_labels_list.append(i['next_sentence_labels'])
+            
     tokens = padding(token_list)
     segments = padding(segment_list)
     sep_indices = padding(sep_indices_list)
     mask_list = padding(mask_list)
-    next_sentence_labels = padding(next_sentence_labels_list)
     hist_len =  padding(hist_len_list)
     num_frames = padding(num_frames_list)
     i3d = padding(image_feat_list, seq_type='i3d')
+    gt_option_inds = padding(gt_option_inds)
+    round_ids = padding(round_ids)
+    if not eval:
+        next_sentence_labels = padding(next_sentence_labels_list)
+        return tokens, segments, sep_indices, mask_list, next_sentence_labels, hist_len, num_frames, i3d
 
-    return tokens, segments, sep_indices, mask_list, next_sentence_labels, hist_len, num_frames, i3d
+    return tokens, segments, sep_indices, mask_list, hist_len, gt_option_inds, round_ids, num_frames, i3d
 
 def read_command_line(argv=None):
     parser = argparse.ArgumentParser(description='Large Scale Pretraining for Visual Dialog')

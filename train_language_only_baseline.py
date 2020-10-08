@@ -37,10 +37,12 @@ def padding(seq, pad_token=0):
 
 def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=False, sample_size=None, evaluation=False):
     
-    input_ids, token_type_ids, sep_indices, labels, next_sentence_labels, hist_len, num_frames, i3d = batch
-    batch_size, num_rounds, num_sampels, embed_size = input_ids.shape
-
-    num_frames = num_frames.unsqueeze(dim=1).unsqueeze(dim=2).expand(-1,10,2).reshape(batch_size*num_rounds*num_sampels,-1)
+    if evaluation:
+        input_ids, token_type_ids, sep_indices, labels, hist_len, num_frames, i3d = [batch[key] for key in batch.keys()]
+    else:
+        input_ids, token_type_ids, sep_indices, labels, next_sentence_labels, hist_len, num_frames, i3d = batch
+        batch_size, num_rounds, num_sampels, embed_size = input_ids.shape
+        num_frames = num_frames.unsqueeze(dim=1).unsqueeze(dim=2).expand(-1,10,2).reshape(batch_size*num_rounds*num_sampels,-1)
     
     input_ids = input_ids.view(-1, input_ids.shape[-1])
     token_type_ids = token_type_ids.view(-1, token_type_ids.shape[-1])
@@ -59,15 +61,15 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
     sep_indices = sep_indices[sample_indices, :]
     labels = labels[sample_indices, :]
     hist_len = hist_len[sample_indices]
-    num_frames = num_frames[sample_indices]
-    
+    #num_frames = num_frames[sample_indices]
+    num_frames = 0
     
     if not evaluation:
         next_sentence_label = next_sentence_labels.view(-1)
         next_sentence_label = next_sentence_label[sample_indices]
         next_sentence_label = next_sentence_label.to(params['device'])
     else:
-        next_sentence_labels = None
+        next_sentence_label = None
     
     input_ids = input_ids.to(params['device'])
     token_type_ids = token_type_ids.to(params['device'])
@@ -402,7 +404,7 @@ if __name__ == '__main__':
         old_num_iter_per_epoch = num_iter_per_epoch
         if params['overfit']:
             num_iter_per_epoch = 100
-        if iter_id % num_iter_per_epoch == 0 and params['overfit'] is None:
+        if iter_id % num_iter_per_epoch == 0 and params['overfit'] is False:
                 torch.save(
                     {'model_state_dict': model.module.state_dict(), 'scheduler_state_dict': scheduler.state_dict() \
                     , 'optimizer_state_dict': optimizer.state_dict(), 'iter_id': iter_id},
@@ -440,4 +442,4 @@ if __name__ == '__main__':
             dataset.split = 'train'
 
         num_iter_per_epoch = old_num_iter_per_epoch
-        
+

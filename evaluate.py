@@ -5,10 +5,10 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn import CrossEntropyLoss
 from torch.utils.data import DataLoader
-from dataloader.dataloader_visdial import VisdialDataset
+from dataloader.dataloader_visdial import VisdialDataset, collate_fn
 import options
-from models.language_only_dialog_encoder import DialogEncoder
-from models.visual_dialog_encoder import VisualDialogEncoder
+from models.language_and_video_encoder import DialogEncoder
+
 import torch.optim as optim
 from utils.visualize import VisdomVisualize
 import pprint
@@ -24,14 +24,17 @@ import json
 import logging
 from train_language_only_baseline import forward
 
-def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
+def eval_ai_generate(dataloader, model, params, eval_batch_size, split='test'):
 
+    sparse_metrics = SparseGTMetrics()
     ranks_json = []
-    dialog_encoder.eval()
+    
+    model.eval()
     batch_idx = 0
+    
     with torch.no_grad():
 
-        batch_size = 1
+        batch_size = 2
         #batch_size = 500 * (params['n_gpus']/8)
         #batch_size = min([1, 2, 4, 5, 100, 1000, 200, 8, 10, 40, 50, 500, 20, 25, 250, 125], \
         #     key=lambda x: abs(x-batch_size) if x <= batch_size else float("inf"))
@@ -41,6 +44,27 @@ def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
             if epochId == 1:
                 break
 
+            input_ids, token_type_ids, sep_indices, labels, hist_len, gt_option_inds, num_rounds, num_frames, i3d = batch
+            
+            num_rounds =input_ids.shape[1]
+            num_options = input_ids.shape[2]
+            
+            input_ids = input_ids.view(-1, input_ids.shape[-1])
+            token_type_ids = token_type_ids.view(-1, token_type_ids.shape[-1])
+            sep_indices = sep_indices.view(-1, sep_indices.shape[-1])
+            labels = labels.view(-1, labels.shape[-1])
+            hist_len = hist_len.view(-1)
+            i3d = i3d.unsqueeze(1).unsqueeze(2).expand(eval_batch_size, num_rounds, num_options, i3d.shape[1],
+                                                       i3d.shape[-1]).contiguous()
+            num_frames = num_frames.unsqueeze(1).unsqueeze(2).expand(eval_batch_size, num_rounds, num_options)
+            '''
+            gt_option_inds = batch['gt_option_inds']
+            gt_relevance = batch['gt_relevance']
+            gt_relevance_round_id = batch['round_id'].squeeze(1)
+            '''
+            
+            # get input tokens
+            '''
             tokens = batch['tokens']
             num_rounds = tokens.shape[1]
             num_options = tokens.shape[2]
@@ -54,12 +78,11 @@ def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
             hist_len = batch['hist_len']
             hist_len = hist_len.view(-1)
             
-            # get image features
-            '''
+ 
             features = batch['image_feat'] 
             spatials = batch['image_loc'] 
             image_mask = batch['image_mask']
-
+            
             # expand the image features to match those of tokens etc.
             max_num_regions = features.shape[-2]
             features = features.unsqueeze(1).unsqueeze(1).expand(eval_batch_size, num_rounds, num_options, max_num_regions, 2048).contiguous()
@@ -70,7 +93,7 @@ def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
             spatials = spatials.view(-1, max_num_regions, 5)
             image_mask = image_mask.view(-1, max_num_regions)
             
-            assert tokens.shape[0] == segments.shape[0] == sep_indices.shape[0] == mask.shape[0] == \
+            assert tokens.shape[0] == token_type_ids.shape[0] == sep_indices.shape[0] == mask.shape[0] == \
                 hist_len.shape[0] == features.shape[0] == spatials.shape[0] == \
                     image_mask.shape[0] == num_rounds * num_options * eval_batch_size
             '''
@@ -80,20 +103,26 @@ def eval_ai_generate(dataloader, params, eval_batch_size, split='test'):
             for j in range((eval_batch_size * num_rounds * num_options)//batch_size):
                 # create chunks of the original batch
                 item = {}
-                item['tokens'] = tokens[j*batch_size:(j+1)*batch_size,:]
-                item['segments'] = segments[j*batch_size:(j+1)*batch_size,:]
+                item['input_ids'] = input_ids[j*batch_size:(j+1)*batch_size,:]
+                item['token_type_ids'] = token_type_ids[j*batch_size:(j+1)*batch_size,:]
                 item['sep_indices'] = sep_indices[j*batch_size:(j+1)*batch_size,:]
-                item['mask'] = mask[j*batch_size:(j+1)*batch_size,:]
+                item['labels'] = labels[j*batch_size:(j+1)*batch_size,:]
                 item['hist_len'] = hist_len[j*batch_size:(j+1)*batch_size]
+                item['num_frames'] = num_frames[j*batch_size:(j+1)*batch_size]
+                item['i3d'] = i3d[j*batch_size:(j+1)*batch_size]
+
+                nsp_scores = forward(model, item, params, output_nsp_scores=True, evaluation=True)
+                
                 '''
                 item['image_feat'] = features[j*batch_size:(j+1)*batch_size, : , :]
                 item['image_loc'] = spatials[j*batch_size:(j+1)*batch_size, : , :]
                 item['image_mask'] = image_mask[j*batch_size:(j+1)*batch_size, :]
                 '''
-                _, _, _, nsp_scores = forward(dialog_encoder, item, params, output_nsp_scores=True, evaluation=True)
+                nsp_scores = forward(model, item, params, output_nsp_scores=True, evaluation=True)
                 # normalize nsp scores
-                nsp_probs = F.softmax(nsp_scores, dim=1)
+                nsp_probs = F.softmax(nsp_scores[1], dim=1)
                 assert nsp_probs.shape[-1] == 2
+                print(nsp_probs[:,0])
                 output.append(nsp_probs[:,0])
 
             # print("output shape",torch.cat(output,0).shape)
@@ -120,14 +149,15 @@ if __name__ == '__main__':
     params = options.read_command_line()
     pprint.pprint(params)
     dataset = VisdialDataset(params)
-    eval_batch_size = 1
-    split = 'test'
+    eval_batch_size = 2
+    split = 'val'
     dataset.split = split
     dataloader = DataLoader(
         dataset,
         batch_size=eval_batch_size,
         shuffle=False,
         num_workers=params['num_workers'],
+        collate_fn=lambda x: collate_fn(x, features=True, eval=True),
         drop_last=False,
         pin_memory=False)
 
@@ -135,7 +165,7 @@ if __name__ == '__main__':
     params['device'] = device
 
     #dialog_encoder = VisualDialogEncoder(params['model_config'])
-    dialog_encoder = DialogEncoder()
+    model = DialogEncoder()
 
     if params['start_path']:
         pretrained_dict = torch.load(params['start_path'])
@@ -143,16 +173,16 @@ if __name__ == '__main__':
         if 'model_state_dict' in pretrained_dict:
             pretrained_dict = pretrained_dict['model_state_dict']
 
-        model_dict = dialog_encoder.state_dict()
+        model_dict = model.state_dict()
         pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict}
         print("number of keys transferred", len(pretrained_dict))
         assert len(pretrained_dict.keys()) > 0
         model_dict.update(pretrained_dict)
-        dialog_encoder.load_state_dict(model_dict)
+        model.load_state_dict(model_dict)
 
-    dialog_encoder = nn.DataParallel(dialog_encoder)
-    dialog_encoder.to(device)
+    model = nn.DataParallel(model)
+    model.to(device)
 
-    ranks_json = eval_ai_generate(dataloader, params, eval_batch_size, split=split)
+    ranks_json = eval_ai_generate(dataloader, model, params, eval_batch_size, split=split)
 
     json.dump(ranks_json, open(params['save_name'] + '_predictions.txt', "w"))

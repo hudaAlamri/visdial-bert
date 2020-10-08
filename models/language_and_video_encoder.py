@@ -43,6 +43,22 @@ class DialogEncoder(nn.Module):
                     attention_mask=attention_mask,
                     return_dict=return_dict
                 )
+                hidden_states = transformer_outputs['last_hidden_state']
+                lm_scores, nsp_scores = self.bert_pretrained.cls(sequence_output=transformer_outputs['last_hidden_state'],
+                                                         pooled_output=transformer_outputs['pooler_output'])
+                outputs = (lm_scores, nsp_scores) + transformer_outputs['hidden_states']
+
+                lm_scores.detach()
+                nsp_scores.detach()
+                loss = None
+
+                if next_sentence_label is not None and labels is not None:
+                    loss_lm_fct = CrossEntropyLoss(ignore_index=-1)
+                    nsp_loss = loss_lm_fct(nsp_scores, next_sentence_label)
+                    lm_loss = loss_lm_fct(lm_scores.view(-1, lm_scores.size(2)), labels.view(-1))
+                    outputs = (lm_loss, nsp_loss)
+
+                return outputs
         else:
 
                 transformer_outputs = self.bert_pretrained.bert(
@@ -52,14 +68,14 @@ class DialogEncoder(nn.Module):
                     return_dict=return_dict
                 )
 
-        hidden_states = transformer_outputs['last_hidden_state']
-        lm_scores, nsp_scores = self.bert_pretrained.cls(sequence_output=transformer_outputs['last_hidden_state'],
+                hidden_states = transformer_outputs['last_hidden_state']
+                lm_scores, nsp_scores = self.bert_pretrained.cls(sequence_output=transformer_outputs['last_hidden_state'],
                                                          pooled_output=transformer_outputs['pooler_output'])
         
-        outputs = (lm_scores, nsp_scores) + transformer_outputs['hidden_states']
+                outputs = (lm_scores, nsp_scores) + transformer_outputs['hidden_states']
 
 
-        if mode == 1 or mode ==0:
+        if mode == 1:
           
             lm_scores.detach()
             nsp_scores.detach()
@@ -72,13 +88,11 @@ class DialogEncoder(nn.Module):
                 lm_loss = loss_lm_fct(lm_scores.view(-1, lm_scores.size(2)), labels[0].view(-1))
                 outputs = (lm_loss, nsp_loss)
 
-                return outputs
-            
             return outputs
+        
 
         else:
-
-            
+ 
             #regress_input_shifted = list(map(lambda last_frame: hidden_states[:, :int(last_frame) - 1, :], num_frames))
             lm_video_regs = self.bert_pretrained.video_inverse_ff(hidden_states[:, :labels[1].size(1), :])
             #shifted_labels = list(map(lambda last_frame: labels[1][:, int(last_frame) - 1, :], num_frames))
@@ -98,8 +112,6 @@ class DialogEncoder(nn.Module):
                 '''
                 video_loss = loss_video_fct(lm_video_regs, labels[1])
             
- 
-                
                 outputs = video_loss
 
             return outputs
