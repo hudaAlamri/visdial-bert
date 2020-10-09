@@ -414,7 +414,7 @@ class VisdialDataset(data.Dataset):
                 i3d = torch.cat([i3d_flow[:min_length], i3d_rgb[:min_length], vgg[:min_length]], dim=1)
                 item['num_frames'] = i3d.size(0)
                 item['image_feat'] = i3d
-
+                
             return item
 
         else:

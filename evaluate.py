@@ -23,6 +23,7 @@ from utils.optim_utils import WarmupLinearScheduleNonZero
 import json
 import logging
 from train_language_only_baseline import forward
+from tqdm import tqdm
 
 def eval_ai_generate(dataloader, model, params, eval_batch_size, split='test'):
 
@@ -39,7 +40,7 @@ def eval_ai_generate(dataloader, model, params, eval_batch_size, split='test'):
         #batch_size = min([1, 2, 4, 5, 100, 1000, 200, 8, 10, 40, 50, 500, 20, 25, 250, 125], \
         #     key=lambda x: abs(x-batch_size) if x <= batch_size else float("inf"))
         print("batch size for evaluation", batch_size)
-        for epochId, _, batch in batch_iter(dataloader, params):
+        for epochId, _, batch in tqdm(batch_iter(dataloader, params)):
 
             if epochId == 1:
                 break
