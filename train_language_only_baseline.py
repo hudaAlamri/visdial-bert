@@ -24,6 +24,7 @@ import pprint
 from time import gmtime, strftime
 from timeit import default_timer as timer
 from tqdm import tqdm
+import json 
 
 def padding(seq, pad_token=0):
     max_len = max([i.size(0) for i in seq])
@@ -423,7 +424,7 @@ if __name__ == '__main__':
           
            # fire evaluation
            #print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
-           if  (iter_id % num_iter_per_epoch == 0):
+           if  (iter_id % num_iter_per_epoch == 0 and iter_id != 0):
                eval_batch_size = 2
                if params['overfit']:
                    eval_batch_size = 5
@@ -446,7 +447,8 @@ if __name__ == '__main__':
                        viz.linePlot(iter_id, metric_value, 'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1], metric_name)
                    else:
                        viz.linePlot(iter_id, metric_value, 'Retrieval Val Metrics', metric_name)
-               
+                
+               json.dump(all_metrics, open(params['save_name'] + '_' + str(iter_id) +  '_predictions.txt', "w"))
                dataset.split = 'train'
 
            num_iter_per_epoch = old_num_iter_per_epoch
@@ -497,10 +499,11 @@ if __name__ == '__main__':
                print(f"{metric_name}: {metric_value}")
                viz.linePlot(checkpoint, metric_value,
                             'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1], metric_name)
-           '''
+           
            if 'round' in metric_name:
                viz.linePlot(checkpoint, metric_value, 'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1],
                             metric_name)
            else:
                viz.linePlot(checkpoint, metric_value, 'Retrieval Val Metrics', metric_name)
-           '''
+
+       json.dump(all_metrics, open(params['save_name'] + '_predictions.txt', "w"))
