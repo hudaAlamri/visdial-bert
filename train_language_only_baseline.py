@@ -183,7 +183,8 @@ def visdial_evaluate(dataloader, model, params, eval_batch_size):
         
         batch_size = eval_batch_size
         
-        for epoch_id, _, batch in tqdm(batch_iter(dataloader, params)):
+        for epoch_id, _, batch in batch_iter(dataloader, params):
+        
             if epoch_id == 1:
                 break
          
@@ -205,7 +206,7 @@ def visdial_evaluate(dataloader, model, params, eval_batch_size):
             output = []
             assert (eval_batch_size * num_rounds * num_options) // batch_size == (
                         eval_batch_size * num_rounds * num_options) / batch_size
-            for j in range((eval_batch_size * num_rounds * num_options) // batch_size):
+            for j in tqdm(range((eval_batch_size * num_rounds * num_options) // batch_size)):
                 # create chunks of the original batch
                 item = {}
                 item['input_ids'] = input_ids[j * batch_size:(j + 1) * batch_size, :]
@@ -487,11 +488,17 @@ if __name__ == '__main__':
 
        all_metrics = visdial_evaluate(dataloader, model, params, eval_batch_size)
        checkpoint = int(params['start_path'].split('_')[-1].split('.')[0])
+       basic_metrics = ['r@1', 'r@5', 'r@10', 'mean', 'mrr']
+       print('\n')
        for metric_name, metric_value in all_metrics.items():
-           if 'round' in metric_name:
+           if metric_name in basic_metrics:
                print(f"{metric_name}: {metric_value}")
+               viz.linePlot(checkpoint, metric_value,
+                            'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1], metric_name)
+           '''
+           if 'round' in metric_name:
                viz.linePlot(checkpoint, metric_value, 'Retrieval Round Val Metrics Round -' + metric_name.split('_')[-1],
                             metric_name)
            else:
                viz.linePlot(checkpoint, metric_value, 'Retrieval Val Metrics', metric_name)
-        
+           '''

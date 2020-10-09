@@ -13,7 +13,7 @@ def read_command_line(argv=None):
     parser.add_argument('-do_eval',  action='store_true', help='run evaluation')
     parser.add_argument('-visdial_processed_train', default='data/avsd/train.json', \
                                  help='json file containing train split of visdial data')
-    parser.add_argument('-visdial_processed_val', default='data/avsd/train.json',
+    parser.add_argument('-visdial_processed_val', default='data/avsd/val.json',
                             help='json file containing val split of visdial data')
     parser.add_argument('-visdial_processed_test', default='data/visdial/visdial_1.0_test_processed.json',
                             help='json file containing test split of visdial data')
@@ -56,8 +56,8 @@ def read_command_line(argv=None):
     parser.add_argument('-overfit', action='store_true', help='overfit for debugging')
     parser.add_argument('-continue', action='store_true', help='continue training')
 
-    parser.add_argument('-num_train_samples',default=100,type=int, help='number of train samples, set 0 to include all')
-    parser.add_argument('-num_val_samples',default=1, type=int, help='number of val samples, set 0 to include all')
+    parser.add_argument('-num_train_samples',default=0,type=int, help='number of train samples, set 0 to include all')
+    parser.add_argument('-num_val_samples',default=0, type=int, help='number of val samples, set 0 to include all')
     parser.add_argument('-num_options',default=1, type=int, help='number of options to use. Max: 100 Min: 2')
     parser.add_argument('-n_gpus',default=1, type=int, help='number of gpus running the job')
     parser.add_argument('-sequences_per_image',default=8, type=int, help='number of sequences sampled from an image during training')
