@@ -87,7 +87,6 @@ def forward(model, batch, params, output_nsp_scores=False, output_lm_scores=Fals
     lm_scores = None
     sep_len = hist_len + 1
     
-
     if params['mode'] == 0:
         outputs = model(input_ids=input_ids,
                         sep_indices=sep_indices,
@@ -182,7 +181,6 @@ def visdial_evaluate(dataloader, model, params, eval_batch_size):
         '''
         
         batch_size = eval_batch_size
-        
         for epoch_id, _, batch in batch_iter(dataloader, params):
         
             if epoch_id == 1:
@@ -247,14 +245,16 @@ if __name__ == '__main__':
    
    pprint.pprint(params)
    viz.addText(pprint.pformat(params, indent=4))
-
+    
    dataset = VisdialDataset(params)
+  
    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
    params['device'] = device
-   model = DialogEncoder()
-   
+
    if params['do_train']:
        
+        
+       model = DialogEncoder()
        dataset.split = 'train'
        dataloader = DataLoader(
            dataset,
@@ -452,6 +452,8 @@ if __name__ == '__main__':
            num_iter_per_epoch = old_num_iter_per_epoch
 
    else:
+
+       model = DialogEncoder()
        print('Running evaluation for checking point:%s',params['start_path'])
 
        if params['start_path']:
@@ -473,7 +475,7 @@ if __name__ == '__main__':
        if params['overfit']:
            eval_batch_size = 1
        else:
-           eval_batch_size = 1
+           eval_batch_size = params['batch_size']
            
        dataset.split = 'val'
        # each image will need 1000 forward passes, (100 at each round x 10 rounds).
