@@ -254,12 +254,16 @@ if __name__ == '__main__':
 
    if params['do_train']:
        
-        
+       if params['overfit']:
+            batch_size= 5
+       else:
+            batch_size=params['batch_size']
+ 
        model = DialogEncoder()
        dataset.split = 'train'
        dataloader = DataLoader(
            dataset,
-           batch_size=params['batch_size'] if not params['overfit'] else 5,
+           batch_size=batch_size,
            shuffle=True,
            num_workers=params['num_workers'],
            drop_last=True,
@@ -311,10 +315,11 @@ if __name__ == '__main__':
                                        t_total=200000, last_epoch=pretrained_dict["iterId"])
                    scheduler.load_state_dict(pretrained_dict_scheduler)
                    start_iter_id = pretrained_dict['iterId']
-
-       num_iter_per_epoch = dataset.numDataPoints['train'] // (
-           params['batch_size'] // params['sequences_per_image'] if (params['batch_size'] // params['sequences_per_image']) \
-           else 1 if not params['overfit'] else 5)
+        
+       if  params['overfit']:
+         num_iter_per_epoch = 1
+       else:
+            num_iter_per_epoch = dataset.numDataPoints['train'] // params['batch_size']    
        
        print('\n%d iter per epoch.' % num_iter_per_epoch)
        
