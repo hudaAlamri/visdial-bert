@@ -182,7 +182,7 @@ def visdial_evaluate(dataloader, model, params, eval_batch_size):
         '''
         
         batch_size = eval_batch_size
-        for epoch_id, _, batch in batch_iter(dataloader, params):
+        for epoch_id, _, batch in tqdm(batch_iter(dataloader, params)):
         
             if epoch_id == 1:
                 break
@@ -205,7 +205,7 @@ def visdial_evaluate(dataloader, model, params, eval_batch_size):
             output = []
             assert (eval_batch_size * num_rounds * num_options) // batch_size == (
                         eval_batch_size * num_rounds * num_options) / batch_size
-            for j in tqdm(range((eval_batch_size * num_rounds * num_options) // batch_size)):
+            for j in range((eval_batch_size * num_rounds * num_options) // batch_size):
                 # create chunks of the original batch
                 item = {}
                 item['input_ids'] = input_ids[j * batch_size:(j + 1) * batch_size, :]
@@ -453,7 +453,7 @@ if __name__ == '__main__':
                    else:
                        viz.linePlot(iter_id, metric_value, 'Retrieval Val Metrics', metric_name)
                 
-               json.dump(all_metrics, open(params['save_name'] + '_' + str(iter_id) +  '_predictions.txt', "w"))
+               json.dump(all_metrics, open(params['eval_save_name'] + '_' + str(iter_id) +  '_predictions.txt', "w"))
                dataset.split = 'train'
 
            num_iter_per_epoch = old_num_iter_per_epoch
@@ -511,4 +511,4 @@ if __name__ == '__main__':
            else:
                viz.linePlot(checkpoint, metric_value, 'Retrieval Val Metrics', metric_name)
 
-       json.dump(all_metrics, open(params['save_name'] + '_predictions.txt', "w"))
+       json.dump(all_metrics, open(params['eval_save_name'] + '_predictions.txt', "w"))
