@@ -88,6 +88,7 @@ class SparseGTMetrics(object):
                 "mean": torch.mean(__rank_list).item(),
                 "mrr": torch.mean(__rank_list.reciprocal()).item()
             }
+            '''
             # add round metrics
             _rank_list_rnd = np.concatenate(self._rank_list_rnd)
             _rank_list_rnd = _rank_list_rnd.astype(float)
@@ -103,6 +104,7 @@ class SparseGTMetrics(object):
                 metrics["r_10" + "_round_" + str(rnd)] = r_10_rnd[rnd-1]
                 metrics["mean" + "_round_" + str(rnd)] = mean_rnd[rnd-1]
                 metrics["mrr" + "_round_" + str(rnd)] = mrr_rnd[rnd-1]
+            '''
         else:
             metrics = {}
 

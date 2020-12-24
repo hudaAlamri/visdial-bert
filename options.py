@@ -9,11 +9,11 @@ def read_command_line(argv=None):
 
     #-------------------------------------------------------------------------
     # Data input settings
-    parser.add_argument('-visdial_processed_train', default='data/visdial/visdial_1.0_train_processed.json', \
+    parser.add_argument('-visdial_processed_train', default='data/avsd/data/train.json', \
                                  help='json file containing train split of visdial data')
-    parser.add_argument('-visdial_processed_val', default='data/visdial/visdial_1.0_val_processed.json',
+    parser.add_argument('-visdial_processed_val', default='data/avsd/data/val.json',
                             help='json file containing val split of visdial data')
-    parser.add_argument('-visdial_processed_test', default='data/visdial/visdial_1.0_test_processed.json',
+    parser.add_argument('-visdial_processed_test', default='data/avsd/data/test_options.json',
                             help='json file containing test split of visdial data')
     parser.add_argument('-visdial_image_feats', default='data/visdial/visdial_img_feat.lmdb',
                             help='json file containing image feats for train,val and splits of visdial data')

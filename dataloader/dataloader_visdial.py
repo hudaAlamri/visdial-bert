@@ -13,7 +13,7 @@ class VisdialDataset(data.Dataset):
         self.numDataPoints = {}
         num_samples_train = params['num_train_samples']
         num_samples_val = params['num_val_samples']
-        self._image_features_reader = ImageFeaturesH5Reader(params['visdial_image_feats'])
+        #self._image_features_reader = ImageFeaturesH5Reader(params['visdial_image_feats'])
         with open(params['visdial_processed_train']) as f:
             self.visdial_data_train = json.load(f)
             if params['overfit']:
@@ -236,7 +236,8 @@ class VisdialDataset(data.Dataset):
             item['mask'] = mask_all_rnd
             item['next_sentence_labels'] = next_labels_all_rnd
             item['hist_len'] = hist_len_all_rnd
-            
+
+            '''
             # get image features
             features, num_boxes, boxes, _ , image_target = self._image_features_reader[img_id]
             features, spatials, image_mask, image_target, image_label = encode_image_input(features, num_boxes, boxes, image_target, max_regions=self._max_region_num)
@@ -245,6 +246,7 @@ class VisdialDataset(data.Dataset):
             item['image_mask'] = image_mask
             item['image_target'] = image_target
             item['image_label'] = image_label
+            '''
             return item
         
         elif self.split == 'val':
@@ -334,6 +336,7 @@ class VisdialDataset(data.Dataset):
             item['round_id'] = torch.LongTensor([self.visdial_data_val_dense[index]['round_id']])
             item['gt_relevance'] = gt_relevance
 
+            '''
             # add image features. Expand them to create batch * num_rounds * num options * num bbox * img feats
             features, num_boxes, boxes, _ , image_target = self._image_features_reader[img_id]
             features, spatials, image_mask, image_target, image_label = encode_image_input(features, num_boxes, boxes, \
@@ -344,9 +347,9 @@ class VisdialDataset(data.Dataset):
             item['image_mask'] = image_mask
             item['image_target'] = image_target
             item['image_label'] = image_label
-
-            item['image_id'] = torch.LongTensor([img_id])
             
+            item['image_id'] = torch.LongTensor([img_id])
+            '''
             return item
         
         else:

@@ -116,7 +116,7 @@ def visdial_evaluate(dataloader, params, eval_batch_size):
         batch_size = min([1, 2, 4, 5, 100, 1000, 200, 8, 10, 40, 50, 500, 20, 25, 250, 125], \
              key=lambda x: abs(x-batch_size) if x <= batch_size else float("inf"))
         if params['overfit']:
-            batch_size = 100
+            batch_size = 5
         for epoch_id, _, batch in batch_iter(dataloader, params):
             if epoch_id == 1:
                 break
@@ -253,7 +253,7 @@ if __name__ == '__main__':
             loss, lm_loss, nsp_loss = forward(dialog_encoder, batch, params, sample_size=params['batch_size'])
         else:
             sample_size = 64
-            loss, lm_loss, nsp_loss = forward(dialog_encoder, batch, params, sample_size=sample_size)
+            loss, lm_loss, nsp_loss = forward(dialog_encoder, batch, params, sample_size=params['batch_size'])
 
         lm_nsp_loss = None
         if lm_loss is not None and nsp_loss is not None:
@@ -266,7 +266,7 @@ if __name__ == '__main__':
             optimizer.step()
             optimizer.zero_grad()
                         
-        if iter_id % 10 == 0:
+        if iter_id % 100 == 0:
             end_t = timer()
             curEpoch = float(iter_id) / num_iter_per_epoch
             timeStamp = strftime('%a %d %b %y %X', gmtime())
@@ -299,7 +299,7 @@ if __name__ == '__main__':
 
         old_num_iter_per_epoch = num_iter_per_epoch
         if params['overfit']:
-            num_iter_per_epoch = 100
+            num_iter_per_epoch = 1
         if iter_id % num_iter_per_epoch == 0:
             torch.save({'model_state_dict' : dialog_encoder.module.state_dict(),'scheduler_state_dict':scheduler.state_dict() \
                  ,'optimizer_state_dict': optimizer.state_dict(), 'iter_id':iter_id}, os.path.join(params['save_path'], 'visdial_dialog_encoder_%d.ckpt'%iter_id))
@@ -307,9 +307,10 @@ if __name__ == '__main__':
         if iter_id % num_iter_per_epoch == 0:
             viz.save()
         # fire evaluation
-        print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
-        if  ((iter_id % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0) and iter_id > 0:
-            eval_batch_size = 2
+
+        if  ((iter_id % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0 and iter_id > 0) :
+            print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
+            eval_batch_size = 1
             if params['overfit']:
                 eval_batch_size = 5
             
