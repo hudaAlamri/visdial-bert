@@ -112,9 +112,12 @@ def visdial_evaluate(dataloader, params, eval_batch_size):
     dialog_encoder.eval()
     batch_idx = 0
     with torch.no_grad():
+        batch_size = 5
+        '''
         batch_size = 500 * (params['n_gpus']/8)
         batch_size = min([1, 2, 4, 5, 100, 1000, 200, 8, 10, 40, 50, 500, 20, 25, 250, 125], \
              key=lambda x: abs(x-batch_size) if x <= batch_size else float("inf"))
+        '''
         if params['overfit']:
             batch_size = 5
         for epoch_id, _, batch in batch_iter(dataloader, params):
@@ -156,13 +159,13 @@ def visdial_evaluate(dataloader, params, eval_batch_size):
             output = torch.cat(output,0).view(eval_batch_size, num_rounds, num_options)
             sparse_metrics.observe(output, gt_option_inds)
             output = output[torch.arange(output.size(0)), gt_relevance_round_id - 1, :]
-            ndcg.observe(output, gt_relevance)
+            #ndcg.observe(output, gt_relevance)
             batch_idx += 1
 
     dialog_encoder.train()
     all_metrics = {}
     all_metrics.update(sparse_metrics.retrieve(reset=True))
-    all_metrics.update(ndcg.retrieve(reset=True))
+    #all_metrics.update(ndcg.retrieve(reset=True))
 
     return all_metrics
 
@@ -183,13 +186,13 @@ if __name__ == '__main__':
     dataset = VisdialDataset(params)
 
     dataset.split = 'train'
+
     dataloader = DataLoader(
         dataset,
         batch_size= params['batch_size']//params['sequences_per_image'] if (params['batch_size']//params['sequences_per_image'])  \
             else 1 if not params['overfit'] else 5,
-        shuffle=False,
+        shuffle=True,
         num_workers=params['num_workers'],
-        drop_last=True,
         pin_memory=False)
 
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -285,6 +288,8 @@ if __name__ == '__main__':
             printInfo = [
                 timeStamp, curEpoch, iter_id, end_t - start_t, print_lm_nsp_loss, print_lm_loss, print_nsp_loss
             ]
+            if iter_id == 7900:
+                print('Debug')
             print(printFormat % tuple(printInfo))
 
             start_t = end_t
@@ -308,7 +313,7 @@ if __name__ == '__main__':
             viz.save()
         # fire evaluation
 
-        if  ((iter_id % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0 and iter_id > 0) :
+        if ((iter_id % (num_iter_per_epoch * (8 // params['sequences_per_image']))) == 0  and iter_id > 0):
             print("num iteration for eval", num_iter_per_epoch * (8 // params['sequences_per_image']))
             eval_batch_size = 1
             if params['overfit']:
@@ -321,8 +326,8 @@ if __name__ == '__main__':
                 batch_size=eval_batch_size,
                 shuffle=False,
                 num_workers=params['num_workers'],
-                drop_last=True,
                 pin_memory=False)
+
             all_metrics = visdial_evaluate(dataloader, params, eval_batch_size)
             for metric_name, metric_value in all_metrics.items():
                 print(f"{metric_name}: {metric_value}")

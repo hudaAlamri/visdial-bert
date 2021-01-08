@@ -19,8 +19,10 @@ def sequence_mask(sequence_length, max_len=None):
 def batch_iter(dataloader, params):
     for epochId in range(params['num_epochs']):
         for idx, batch in enumerate(dataloader):
-            yield epochId, idx, batch
-
+            try:
+                yield epochId, idx, batch
+            except:
+                print('Here')
 def list2tensorpad(inp_list,max_seq_len):
 
 

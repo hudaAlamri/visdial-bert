@@ -9,9 +9,9 @@ def read_command_line(argv=None):
 
     #-------------------------------------------------------------------------
     # Data input settings
-    parser.add_argument('-visdial_processed_train', default='data/avsd/data/train.json', \
+    parser.add_argument('-visdial_processed_train', default='data/avsd/data/train_options.json', \
                                  help='json file containing train split of visdial data')
-    parser.add_argument('-visdial_processed_val', default='data/avsd/data/val.json',
+    parser.add_argument('-visdial_processed_val', default='data/avsd/data/val_options.json',
                             help='json file containing val split of visdial data')
     parser.add_argument('-visdial_processed_test', default='data/avsd/data/test_options.json',
                             help='json file containing test split of visdial data')
@@ -74,13 +74,11 @@ def read_command_line(argv=None):
                             help='Name of save directory within savePath')
 
     #-------------------------------------------------------------------------
-    #-------------------------------------------------------------------------
     try:
         parsed = vars(parser.parse_args(args=argv))
         if parsed['save_name']:
             # Custom save file path
-            parsed['save_path'] = os.path.join(parsed['save_path'],
-                                            parsed['save_name'])
+            parsed['save_path'] = os.path.join(parsed['save_path'], parsed['save_name'])
         else:
             # Standard save path with time stamp
             import random
