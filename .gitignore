@@ -30,6 +30,8 @@ data/
 !visdialch/data/
 checkpoints/
 logs/
+checkpoints
+data
 
 # IPython Notebook
 .ipynb_checkpoints

@@ -9,11 +9,11 @@ def read_command_line(argv=None):
 
     #-------------------------------------------------------------------------
     # Data input settings
-    parser.add_argument('-visdial_processed_train', default='data/avsd/data/train_options.json', \
+    parser.add_argument('-visdial_processed_train', default='data/avsd/train_options.json', \
                                  help='json file containing train split of visdial data')
-    parser.add_argument('-visdial_processed_val', default='data/avsd/data/val_options.json',
+    parser.add_argument('-visdial_processed_val', default='data/avsd/val_options.json',
                             help='json file containing val split of visdial data')
-    parser.add_argument('-visdial_processed_test', default='data/avsd/data/test_options.json',
+    parser.add_argument('-visdial_processed_test', default='data/avsd/test_options.json',
                             help='json file containing test split of visdial data')
     parser.add_argument('-visdial_image_feats', default='data/visdial/visdial_img_feat.lmdb',
                             help='json file containing image feats for train,val and splits of visdial data')
@@ -31,13 +31,14 @@ def read_command_line(argv=None):
                             help='Flag for enabling visdom logging')
     parser.add_argument('-visdom_env', type=str, default='',
                             help='Name of visdom environment for plotting')
-    parser.add_argument('-visdom_server', type=str, default='http://asimo.cc.gatech.edu',
+    parser.add_argument('-visdom_server', type=str, default='sky1.cc.gatech.edu',
                             help='Address of visdom server instance')
     parser.add_argument('-visdom_server_port', type=int, default=7777,
                             help='Port of visdom server instance')
     #-------------------------------------------------------------------------
     # Optimization / training params
-    # Other training environmnet settings
+
+# Other training environmnet settings
     parser.add_argument('-num_workers', default=8, type=int,
                             help='Number of worker threads in dataloader')  
     parser.add_argument('-batch_size', default=80, type=int,
@@ -67,18 +68,17 @@ def read_command_line(argv=None):
     parser.add_argument('-img_loss_coeff',default=1,type=float,help='Coeff for img masked loss')
 
     parser.add_argument('-mask_prob',default=0.15,type=float,help='prob used to sample masked tokens')
+    parser.add_argument('-save_path', default='checkpoints/', help='Path to save checkpoints')
+    parser.add_argument('-save_name', default='', help='Name of save directory within savePath')
 
-    parser.add_argument('-save_path', default='checkpoints/',
-                            help='Path to save checkpoints')
-    parser.add_argument('-save_name', default='',
-                            help='Name of save directory within savePath')
-
+    #-------------------------------------------------------------------------
     #-------------------------------------------------------------------------
     try:
         parsed = vars(parser.parse_args(args=argv))
         if parsed['save_name']:
             # Custom save file path
-            parsed['save_path'] = os.path.join(parsed['save_path'], parsed['save_name'])
+            parsed['save_path'] = os.path.join(parsed['save_path'],
+                                            parsed['save_name'])
         else:
             # Standard save path with time stamp
             import random
